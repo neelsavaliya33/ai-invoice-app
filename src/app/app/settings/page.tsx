@@ -5,13 +5,15 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Button, Card, SectionTitle } from "@/components/ui";
 import { CheckboxCard, FormCard, FormGrid, SelectField, TextareaField, TextField } from "@/components/form-kit";
 import { Monitor, Moon, Sun } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export default function SettingsPage() {
   const theme = useAppSelector((state) => state.ui.theme);
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <SectionTitle title="Settings" subtitle="Company profile, invoice templates, taxes, theme, integrations, and security." />
+      <SectionTitle title={t("settings")} subtitle={t("settingsSubtitle")} />
       <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
         <FormCard title="Company profile" description="Reusable settings form for company identity and invoice defaults." asForm>
           <FormGrid>

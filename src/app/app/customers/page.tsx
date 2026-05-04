@@ -1,11 +1,15 @@
+"use client";
+
 import { AiActionCard, CustomerRows, PageHeaderActions } from "@/components/workflow";
 import { Button } from "@/components/ui";
 import { FilterBar, FormCard, FormGrid, TextareaField, TextField, SelectField } from "@/components/form-kit";
+import { useI18n } from "@/lib/i18n";
 
 export default function CustomersPage() {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <PageHeaderActions title="Customers" subtitle="Manage ledgers, balances, contacts, and follow-ups." button="Add customer" />
+      <PageHeaderActions title={t("customers")} subtitle={t("manageLedgers")} button={t("addCustomer")} />
       <FilterBar>
         <TextField label="Search" placeholder="Name, phone, or GSTIN" />
         <SelectField label="Customer type" options={["All types", "Textile", "Retail"]} />

@@ -2,8 +2,9 @@
 
 import { Provider } from "react-redux";
 import { useEffect } from "react";
+import { setLanguage } from "@/store/store";
 import { store } from "@/store/store";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 function ThemeBridge({ children }: { children: React.ReactNode }) {
   const theme = useAppSelector((state) => state.ui.theme);
@@ -24,10 +25,32 @@ function ThemeBridge({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+function LanguageBridge({ children }: { children: React.ReactNode }) {
+  const language = useAppSelector((state) => state.ui.language);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("ledgerai-language");
+    if (stored === "en" || stored === "gu") {
+      dispatch(setLanguage(stored));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = "ltr";
+    window.localStorage.setItem("ledgerai-language", language);
+  }, [language]);
+
+  return children;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-      <ThemeBridge>{children}</ThemeBridge>
+      <ThemeBridge>
+        <LanguageBridge>{children}</LanguageBridge>
+      </ThemeBridge>
     </Provider>
   );
 }

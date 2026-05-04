@@ -1,17 +1,22 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type ThemeMode = "system" | "light" | "dark";
+type Language = "en" | "gu";
 
 const uiSlice = createSlice({
   name: "ui",
   initialState: {
     theme: "system" as ThemeMode,
+    language: "en" as Language,
     aiOpen: false,
     activeIndustry: "Textile",
   },
   reducers: {
     setTheme(state, action: PayloadAction<ThemeMode>) {
       state.theme = action.payload;
+    },
+    setLanguage(state, action: PayloadAction<Language>) {
+      state.language = action.payload;
     },
     setAiOpen(state, action: PayloadAction<boolean>) {
       state.aiOpen = action.payload;
@@ -22,7 +27,7 @@ const uiSlice = createSlice({
   },
 });
 
-export const { setAiOpen, setTheme, setActiveIndustry } = uiSlice.actions;
+export const { setAiOpen, setTheme, setLanguage, setActiveIndustry } = uiSlice.actions;
 
 export const store = configureStore({
   reducer: {

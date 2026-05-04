@@ -1,11 +1,15 @@
+"use client";
+
 import { AiActionCard, InventoryRows, PageHeaderActions } from "@/components/workflow";
 import { Button } from "@/components/ui";
 import { FilterBar, FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
+import { useI18n } from "@/lib/i18n";
 
 export default function InventoryPage() {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <PageHeaderActions title="Inventory" subtitle="Track stock, reorder levels, valuation, and category-specific item fields." button="Add item" />
+      <PageHeaderActions title={t("inventory")} subtitle={t("trackStock")} button={t("addItem")} />
       <FilterBar className="lg:grid-cols-5">
         <TextField label="Search" placeholder="Item or SKU" />
         <SelectField label="Category" options={["All categories", "Textile", "Electronics"]} />

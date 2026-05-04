@@ -1,6 +1,7 @@
 import { Badge, Button, Card, DataTable, Input, Select, SectionTitle } from "@/components/ui";
 import { FormActions, FormCard, FormGrid, SelectField, TextareaField, TextField } from "@/components/form-kit";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/dropdown-menu";
+import { useI18n } from "@/lib/i18n";
 import { currency } from "@/lib/utils";
 import { customers, inventory, invoices, reports, users } from "@/lib/data";
 import { ArrowUpRight, Copy, Download, FileDown, MoreHorizontal, Pencil, Plus, Send, WandSparkles } from "lucide-react";
@@ -26,14 +27,15 @@ function RowOptions({ type = "record" }: { type?: string }) {
 }
 
 export function KpiGrid() {
+  const { t } = useI18n();
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
       {[
-        ["Sales this month", "INR 9.42L", "green"],
-        ["Receivables", "INR 2.81L", "blue"],
-        ["Inventory value", "INR 6.18L", "violet"],
-        ["Overdue invoices", "18", "red"],
-        ["AI actions", "7 ready", "amber"],
+        [t("salesThisMonth"), "INR 9.42L", "green"],
+        [t("receivables"), "INR 2.81L", "blue"],
+        [t("inventoryValue"), "INR 6.18L", "violet"],
+        [t("overdueInvoices"), "18", "red"],
+        [t("aiActions"), "7 ready", "amber"],
       ].map(([label, value, tone]) => (
         <Card key={label} className="p-5">
           <p className="text-sm text-muted-foreground">{label}</p>
@@ -114,6 +116,7 @@ export function UserRows() {
 }
 
 export function AiActionCard() {
+  const { t } = useI18n();
   return (
     <Card className="p-5">
       <div className="flex items-center gap-2">
@@ -121,8 +124,8 @@ export function AiActionCard() {
           <WandSparkles className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="font-bold">AI Copilot</h3>
-          <p className="text-xs text-muted-foreground">Suggested next action</p>
+          <h3 className="font-bold">{t("aiCopilot")}</h3>
+          <p className="text-xs text-muted-foreground">{t("suggestedAction")}</p>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -131,9 +134,9 @@ export function AiActionCard() {
         ))}
       </div>
       <p className="mt-4 text-sm text-muted-foreground">
-        Collect INR 1.74L from overdue invoices and reorder cotton roll A-12 before weekend demand.
+        {t("heroAiInsight")}
       </p>
-      <Button className="mt-5 w-full">Apply suggestion</Button>
+      <Button className="mt-5 w-full">{t("applySuggestion")}</Button>
     </Card>
   );
 }
@@ -260,9 +263,10 @@ export function PageHeaderActions({ title, subtitle, button }: { title: string; 
 }
 
 export function ActivityCard() {
+  const { t } = useI18n();
   return (
     <Card className="p-5">
-      <h3 className="font-bold">Today activity</h3>
+      <h3 className="font-bold">{t("todayActivity")}</h3>
       <div className="mt-4 space-y-3">
         {["Invoice INV-1048 reminder drafted", "Stock alert raised for Cotton roll A-12", "Priya exported GST summary"].map((activity) => (
           <div key={activity} className="flex items-center justify-between rounded-2xl bg-muted p-3 text-sm">

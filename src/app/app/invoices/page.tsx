@@ -1,13 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { Filter, Plus } from "lucide-react";
 import { InvoiceRows, PageHeaderActions } from "@/components/workflow";
 import { Badge, Button } from "@/components/ui";
 import { FilterBar, SelectField, TextField } from "@/components/form-kit";
+import { useI18n } from "@/lib/i18n";
 
 export default function InvoicesPage() {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <PageHeaderActions title="Invoices" subtitle="Create, send, track, and collect invoices." button="Create invoice" />
+      <PageHeaderActions title={t("invoices")} subtitle={t("createSendTrack")} button={t("createInvoice")} />
       <FilterBar className="lg:grid-cols-[1fr_160px_160px_160px_auto]">
         <TextField label="Search" placeholder="Invoice or customer" />
         <SelectField label="Status" defaultValue="All" options={["All", "Draft", "Sent", "Paid", "Overdue"]} />

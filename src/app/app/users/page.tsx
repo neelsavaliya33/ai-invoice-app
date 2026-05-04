@@ -1,13 +1,17 @@
+"use client";
+
 import { UserRows } from "@/components/workflow";
 import { Button, Card, SectionTitle } from "@/components/ui";
 import { CheckboxCard, FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
+import { useI18n } from "@/lib/i18n";
 
 const permissions = ["View invoices", "Create invoices", "Edit invoices", "Record payments", "View customers", "Manage stock", "Export reports", "Manage users", "View audit logs"];
 
 export default function UsersPage() {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <SectionTitle title="User management" subtitle="Invite team members, assign roles, and protect sensitive business actions." action={<Button>Invite user</Button>} />
+      <SectionTitle title={t("userManagement")} subtitle={t("userSubtitle")} action={<Button>{t("inviteUser")}</Button>} />
       <UserRows />
       <div className="grid gap-6 xl:grid-cols-2">
         <FormCard title="Invite user" description="Reusable invite form for team access workflows." asForm>

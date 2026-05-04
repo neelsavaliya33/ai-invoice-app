@@ -1,11 +1,15 @@
+"use client";
+
 import { AiActionCard, ReportCards } from "@/components/workflow";
 import { Button, Card, SectionTitle } from "@/components/ui";
 import { FilterBar, SelectField, TextField } from "@/components/form-kit";
+import { useI18n } from "@/lib/i18n";
 
 export default function ReportsPage() {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <SectionTitle title="Reports" subtitle="Profit, receivables, inventory, GST, and AI business explanations." action={<Button>Export PDF</Button>} />
+      <SectionTitle title={t("reports")} subtitle={t("reportsSubtitle")} action={<Button>{t("exportPdf")}</Button>} />
       <FilterBar className="lg:grid-cols-5">
         <TextField label="From" type="date" />
         <TextField label="To" type="date" />

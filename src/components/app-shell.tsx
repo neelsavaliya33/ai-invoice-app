@@ -10,20 +10,23 @@ import { Button } from "./ui";
 import { ThemeToggle } from "./theme-toggle";
 import { AiCopilot } from "./ai-copilot";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./dropdown-menu";
+import { LanguageToggle } from "./language-toggle";
+import { TranslationKey, useI18n } from "@/lib/i18n";
 
 const nav = [
-  { href: "/app", label: "Dashboard", icon: Gauge },
-  { href: "/app/invoices", label: "Invoices", icon: FileText },
-  { href: "/app/customers", label: "Customers", icon: Users },
-  { href: "/app/inventory", label: "Inventory", icon: Boxes },
-  { href: "/app/reports", label: "Reports", icon: ChartNoAxesCombined },
-  { href: "/app/users", label: "User Management", icon: UserCog },
-  { href: "/app/settings", label: "Settings", icon: Settings },
+  { href: "/app", labelKey: "dashboard", icon: Gauge },
+  { href: "/app/invoices", labelKey: "invoices", icon: FileText },
+  { href: "/app/customers", labelKey: "customers", icon: Users },
+  { href: "/app/inventory", labelKey: "inventory", icon: Boxes },
+  { href: "/app/reports", labelKey: "reports", icon: ChartNoAxesCombined },
+  { href: "/app/users", labelKey: "userManagement", icon: UserCog },
+  { href: "/app/settings", labelKey: "settings", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary text-primary-foreground font-bold">L</div>
           <div>
             <p className="font-bold text-foreground">LedgerAI</p>
-            <p className="text-xs text-muted-foreground">Invoice OS</p>
+            <p className="text-xs text-muted-foreground">{t("invoiceOs")}</p>
           </div>
         </Link>
         <nav className="space-y-2">
@@ -49,7 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {item.label}
+                {t(item.labelKey as TranslationKey)}
               </Link>
             );
           })}
@@ -60,12 +63,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex h-20 items-center gap-3 px-4 sm:px-6">
             <div className="hidden flex-1 items-center gap-3 rounded-2xl border bg-card px-3 lg:flex">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input className="h-11 flex-1 bg-transparent text-sm outline-none" placeholder="Search invoices, customers, stock, or reports..." />
+              <input className="h-11 flex-1 bg-transparent text-sm outline-none" placeholder={t("searchPlaceholder")} />
             </div>
             <Button variant="secondary" onClick={() => dispatch(setAiOpen(true))}>
               <Bot className="h-4 w-4" />
-              AI Copilot
+              {t("aiCopilot")}
             </Button>
+            <LanguageToggle />
             <ThemeToggle />
             <Button variant="ghost" className="h-11 w-11 p-0">
               <Bell className="h-4 w-4" />
@@ -79,14 +83,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>
                   <span className="block text-sm text-foreground">Neel Savaliya</span>
-                  <span className="block text-xs font-normal">Owner account</span>
+                  <span className="block text-xs font-normal">{t("ownerAccount")}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Company settings</DropdownMenuItem>
-                <DropdownMenuItem>Keyboard shortcuts</DropdownMenuItem>
+                <DropdownMenuItem>{t("profile")}</DropdownMenuItem>
+                <DropdownMenuItem>{t("companySettings")}</DropdownMenuItem>
+                <DropdownMenuItem>{t("keyboardShortcuts")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">Sign out</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">{t("signOut")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
