@@ -1,5 +1,5 @@
 import { Badge, Button, Card, DataTable, Input, Select, SectionTitle } from "@/components/ui";
-import { FormActions, FormCard, FormGrid, SelectField, TextareaField, TextField } from "@/components/form-kit";
+import { DatePickerField, FormActions, FormCard, FormGrid, SelectField, TextareaField, TextField } from "@/components/form-kit";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/dropdown-menu";
 import { useI18n } from "@/lib/i18n";
 import { currency } from "@/lib/utils";
@@ -11,14 +11,14 @@ function RowOptions({ type = "record" }: { type?: string }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-9 w-9 p-0" aria-label={`${type} options`}>
-          <MoreHorizontal className="h-4 w-4" />
+          <MoreHorizontal className="h-5 w-5 shrink-0" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{type} options</DropdownMenuLabel>
-        <DropdownMenuItem><Pencil className="h-4 w-4" /> Edit</DropdownMenuItem>
-        <DropdownMenuItem><Copy className="h-4 w-4" /> Duplicate</DropdownMenuItem>
-        <DropdownMenuItem><Download className="h-4 w-4" /> Export</DropdownMenuItem>
+        <DropdownMenuItem><Pencil className="h-5 w-5 shrink-0" aria-hidden="true" /> Edit</DropdownMenuItem>
+        <DropdownMenuItem><Copy className="h-5 w-5 shrink-0" aria-hidden="true" /> Duplicate</DropdownMenuItem>
+        <DropdownMenuItem><Download className="h-5 w-5 shrink-0" aria-hidden="true" /> Export</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-destructive">Archive</DropdownMenuItem>
       </DropdownMenuContent>
@@ -175,8 +175,8 @@ export function InvoiceForm() {
         <FormCard title="Invoice Details" description="Operational fields for tax, transport, references, and due dates." asForm>
           <FormGrid columns={3}>
             <TextField label="Invoice number" required pattern="INV-[0-9]{4,}" helper="Format: INV-1053" defaultValue="INV-1053" />
-            <TextField label="Invoice date" required type="date" defaultValue="2026-05-04" />
-            <TextField label="Due date" required type="date" defaultValue="2026-05-11" />
+            <DatePickerField label="Invoice date" required defaultValue="2026-05-04" />
+            <DatePickerField label="Due date" required defaultValue="2026-05-11" />
             <SelectField label="Place of supply" required defaultValue="Gujarat" options={["Gujarat", "Maharashtra"]} />
             <SelectField label="Tax type" required defaultValue="GST" options={["GST", "IGST", "No tax"]} />
             <TextField label="Salesperson" required minLength={3} defaultValue="Priya Patel" />
@@ -201,7 +201,7 @@ export function InvoiceForm() {
             <SelectField label="Payment method" required options={["UPI", "Bank transfer", "Cash"]} />
             <TextField label="UPI ID" required pattern="[a-zA-Z0-9.\\-_]{2,}@[a-zA-Z]{2,}" helper="Format: name@bank" defaultValue="ledgerai@upi" />
             <TextField label="Advance received" required pattern="^INR\\s?[0-9,]+$" defaultValue="INR 0" />
-            <TextField label="Reminder date" required type="date" defaultValue="2026-05-10" />
+            <DatePickerField label="Reminder date" required defaultValue="2026-05-10" />
             <TextareaField label="Customer note" required minLength={8} defaultValue="Thank you for your business." />
             <TextareaField label="Terms" required minLength={15} defaultValue="Payment due within 7 days. Goods once sold will not be returned." />
           </FormGrid>

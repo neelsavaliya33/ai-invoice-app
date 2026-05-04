@@ -7,7 +7,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/dropdown-menu";
+import { Calendar } from "@/components/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/popover";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarDays } from "lucide-react";
 import { createContext, useContext, useMemo, useState } from "react";
 
 type Option = string | { label: string; value: string };
@@ -37,6 +45,17 @@ function fieldName(label: string, provided?: string) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "")
   );
+}
+
+function parseDateInput(value?: string | readonly string[] | number) {
+  if (!value || Array.isArray(value)) return undefined;
+  const [year, month, day] = String(value).split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  return new Date(year, month - 1, day);
+}
+
+function formatDateInput(date?: Date) {
+  return date ? format(date, "yyyy-MM-dd") : "";
 }
 
 function validateControl(
@@ -256,6 +275,86 @@ export function TextField({
           onInput?.(event);
         }}
       />
+    </Field>
+  );
+}
+
+export function DatePickerField({
+  label,
+  helper,
+  required,
+  name,
+  defaultValue,
+  value,
+  min,
+  max,
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  helper?: string;
+}) {
+  const context = useContext(FormValidationContext);
+  const resolvedName = fieldName(label, name);
+  const error = context?.errors[resolvedName];
+  const [open, setOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    parseDateInput(value ?? defaultValue),
+  );
+  const selectedValue = formatDateInput(selectedDate);
+  const minDate = parseDateInput(min);
+  const maxDate = parseDateInput(max);
+
+  return (
+    <Field
+      label={label}
+      helper={helper ?? (required ? "Required" : undefined)}
+      required={required}
+      error={error}
+    >
+      <input
+        type="hidden"
+        name={resolvedName}
+        value={selectedValue}
+        data-label={label}
+        data-required={required ? "true" : "false"}
+        data-invalid={error ? "true" : "false"}
+        aria-invalid={error ? "true" : "false"}
+        min={min}
+        max={max}
+        readOnly
+      />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="secondary"
+            className={cn(
+              "h-11 w-full justify-between rounded-xl border bg-background px-3 font-normal",
+              !selectedDate && "text-muted-foreground",
+              error &&
+                "border-destructive text-destructive ring-2 ring-destructive",
+            )}
+          >
+            <span>
+              {selectedDate ? format(selectedDate, "dd MMM yyyy") : "Pick a date"}
+            </span>
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              setSelectedDate(date);
+              context?.clearError(resolvedName);
+              setOpen(false);
+            }}
+            disabled={(date) =>
+              Boolean((minDate && date < minDate) || (maxDate && date > maxDate))
+            }
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
     </Field>
   );
 }

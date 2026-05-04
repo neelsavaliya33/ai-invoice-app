@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Bot, Boxes, FileText, Gauge, Search, Settings, Users, UserCog, ChartNoAxesCombined } from "lucide-react";
+import { Bell, Bot, Boxes, BriefcaseBusiness, Building2, CreditCard, FileText, Gauge, HandCoins, Landmark, ReceiptText, Search, Settings, ShoppingBag, Truck, Users, UserCog, ChartNoAxesCombined } from "lucide-react";
 import { setAiOpen } from "@/store/store";
 import { useAppDispatch } from "@/store/hooks";
 import { cn } from "@/lib/utils";
@@ -18,8 +18,17 @@ const nav = [
   { href: "/app/invoices", labelKey: "invoices", icon: FileText },
   { href: "/app/customers", labelKey: "customers", icon: Users },
   { href: "/app/inventory", labelKey: "inventory", icon: Boxes },
+  { href: "/app/accounting", labelKey: "accounting", icon: Landmark },
+  { href: "/app/expenses", labelKey: "expenses", icon: ReceiptText },
+  { href: "/app/purchases", labelKey: "purchases", icon: ShoppingBag },
+  { href: "/app/payments", labelKey: "payments", icon: CreditCard },
+  { href: "/app/banking", labelKey: "banking", icon: Building2 },
+  { href: "/app/tax", labelKey: "taxGst", icon: FileText },
+  { href: "/app/eway-bills", labelKey: "ewayBills", icon: Truck },
   { href: "/app/reports", labelKey: "reports", icon: ChartNoAxesCombined },
   { href: "/app/users", labelKey: "userManagement", icon: UserCog },
+  { href: "/app/employees", labelKey: "employees", icon: BriefcaseBusiness },
+  { href: "/app/payroll", labelKey: "payroll", icon: HandCoins },
   { href: "/app/settings", labelKey: "settings", icon: Settings },
 ];
 
@@ -30,7 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 animate-fade-up border-r bg-card p-4 lg:block">
+      <aside className="fixed inset-y-0 left-0 hidden w-72 animate-fade-up overflow-y-auto border-r bg-card p-4 lg:block">
         <Link href="/" className="mb-8 flex items-center gap-3 rounded-2xl bg-primary/10 p-3 text-primary">
           <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary text-primary-foreground font-bold">L</div>
           <div>
@@ -51,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="nav-icon" aria-hidden="true" />
                 {t(item.labelKey as TranslationKey)}
               </Link>
             );
@@ -62,17 +71,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
           <div className="flex h-20 items-center gap-3 px-4 sm:px-6">
             <div className="hidden flex-1 items-center gap-3 rounded-2xl border bg-card px-3 lg:flex">
-              <Search className="h-4 w-4 text-muted-foreground" />
+              <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <input className="h-11 flex-1 bg-transparent text-sm outline-none" placeholder={t("searchPlaceholder")} />
             </div>
             <Button variant="secondary" onClick={() => dispatch(setAiOpen(true))}>
-              <Bot className="h-4 w-4" />
+              <Bot className="h-5 w-5 shrink-0" aria-hidden="true" />
               {t("aiCopilot")}
             </Button>
             <LanguageToggle />
             <ThemeToggle />
             <Button variant="ghost" className="h-11 w-11 p-0">
-              <Bell className="h-4 w-4" />
+              <Bell className="h-5 w-5 shrink-0" aria-hidden="true" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

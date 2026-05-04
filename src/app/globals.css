@@ -55,6 +55,16 @@ body {
   color: hsl(var(--foreground));
 }
 
+.lucide {
+  display: inline-block;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 @layer components {
   .container-shell {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
@@ -70,6 +80,14 @@ body {
 
   .label {
     @apply text-sm font-medium text-foreground;
+  }
+
+  .nav-icon {
+    @apply h-5 w-5 shrink-0;
+  }
+
+  .action-icon {
+    @apply h-[18px] w-[18px] shrink-0;
   }
 }
 

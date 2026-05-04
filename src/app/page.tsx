@@ -66,7 +66,9 @@ export default function LandingPage() {
         </nav>
         <div className="flex items-center gap-3">
           <LanguageToggle />
-          <Button variant="ghost">{t("signIn")}</Button>
+          <Link className="inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground" href="/login">
+            {t("signIn")}
+          </Link>
           <Link className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/app">
             {t("startFree")}
           </Link>
@@ -133,7 +135,7 @@ export default function LandingPage() {
             {industries.map(([name, benefit, Icon]) => (
               <Card key={name} className="p-5">
                 <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-7 w-7 shrink-0" aria-hidden="true" />
                 </div>
                 <h3 className="font-bold">{name}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{benefit}</p>

@@ -91,3 +91,61 @@ export const reports = [
   { title: "Stock value trend", value: "INR 6.18L inventory", icon: Boxes },
   { title: "GST summary", value: "INR 84.2k payable", icon: Building2 },
 ];
+
+export const expenses = [
+  { id: "EXP-2101", vendor: "Surat Transport Co.", category: "Transport", date: "02 May 2026", amount: 12600, status: "Approved", tax: "18%" },
+  { id: "EXP-2102", vendor: "Apex Packaging", category: "Packaging", date: "01 May 2026", amount: 8400, status: "Pending", tax: "12%" },
+  { id: "EXP-2103", vendor: "Office Hub", category: "Office supplies", date: "29 Apr 2026", amount: 3200, status: "Paid", tax: "18%" },
+  { id: "EXP-2104", vendor: "Cloud Tools India", category: "Software", date: "28 Apr 2026", amount: 5500, status: "Paid", tax: "18%" },
+];
+
+export const purchases = [
+  { id: "PO-1187", supplier: "Rang Fabrics", status: "Received", date: "30 Apr 2026", amount: 145000, payable: 35000 },
+  { id: "PO-1188", supplier: "Apex Packaging", status: "Ordered", date: "02 May 2026", amount: 42000, payable: 42000 },
+  { id: "PO-1189", supplier: "Tech Cable Mart", status: "Partial", date: "03 May 2026", amount: 58000, payable: 18000 },
+];
+
+export const payments = [
+  { id: "PAY-3021", party: "Kavya Textiles", type: "Received", mode: "UPI", date: "04 May 2026", amount: 50000, status: "Matched" },
+  { id: "PAY-3022", party: "Rang Fabrics", type: "Paid", mode: "Bank", date: "03 May 2026", amount: 30000, status: "Matched" },
+  { id: "PAY-3023", party: "Mehta Traders", type: "Received", mode: "Cash", date: "02 May 2026", amount: 12000, status: "Unmatched" },
+];
+
+export const ledgerEntries = [
+  { date: "04 May 2026", account: "Accounts Receivable", debit: 82400, credit: 0, ref: "INV-1048" },
+  { date: "04 May 2026", account: "Sales Revenue", debit: 0, credit: 69831, ref: "INV-1048" },
+  { date: "04 May 2026", account: "Output GST", debit: 0, credit: 12569, ref: "INV-1048" },
+  { date: "03 May 2026", account: "Transport Expense", debit: 12600, credit: 0, ref: "EXP-2101" },
+];
+
+export const bankTransactions = [
+  { id: "BNK-9021", date: "04 May 2026", narration: "UPI Kavya Textiles", amount: 50000, type: "Credit", status: "Reconciled" },
+  { id: "BNK-9022", date: "03 May 2026", narration: "NEFT Rang Fabrics", amount: 30000, type: "Debit", status: "Reconciled" },
+  { id: "BNK-9023", date: "02 May 2026", narration: "Cash deposit", amount: 12000, type: "Credit", status: "Needs review" },
+];
+
+export const gstSummary = [
+  { label: "Output GST", amount: 142300, status: "Collected" },
+  { label: "Input GST", amount: 58100, status: "Credit" },
+  { label: "Net payable", amount: 84200, status: "Due" },
+  { label: "GSTR-1 readiness", amount: 96, status: "Ready %" },
+];
+
+export const employees = [
+  { id: "EMP-001", name: "Priya Patel", role: "Accountant", department: "Finance", status: "Active", salary: 52000, attendance: "24/26", joining: "12 Jan 2025" },
+  { id: "EMP-002", name: "Rohan Shah", role: "Sales Executive", department: "Sales", status: "Active", salary: 42000, attendance: "23/26", joining: "04 Mar 2025" },
+  { id: "EMP-003", name: "Asha Mehta", role: "Inventory Manager", department: "Operations", status: "Active", salary: 46000, attendance: "25/26", joining: "18 Jun 2024" },
+  { id: "EMP-004", name: "Nilesh Vora", role: "Support Agent", department: "Support", status: "On leave", salary: 36000, attendance: "18/26", joining: "22 Aug 2025" },
+];
+
+export const payrollRuns = [
+  { id: "PAYRUN-0526", period: "May 2026", employees: 4, gross: 176000, deductions: 18400, net: 157600, status: "Draft" },
+  { id: "PAYRUN-0426", period: "Apr 2026", employees: 4, gross: 176000, deductions: 17600, net: 158400, status: "Paid" },
+  { id: "PAYRUN-0326", period: "Mar 2026", employees: 3, gross: 140000, deductions: 13200, net: 126800, status: "Paid" },
+];
+
+export const ewayBills = [
+  { id: "EWB-2426-0018", invoice: "INV-1048", customer: "Kavya Textiles", transporter: "Surat Transport Co.", vehicle: "GJ05AB1234", distance: 265, validUntil: "08 May 2026", status: "Generated", amount: 82400 },
+  { id: "EWB-2426-0019", invoice: "INV-1049", customer: "Mehta Traders", transporter: "Swift Cargo", vehicle: "GJ01CT8890", distance: 92, validUntil: "06 May 2026", status: "Draft", amount: 46800 },
+  { id: "EWB-2426-0020", invoice: "INV-1051", customer: "Prime Mobile", transporter: "Rajkot Logistics", vehicle: "GJ03BX4401", distance: 218, validUntil: "09 May 2026", status: "Ready", amount: 74100 },
+];
