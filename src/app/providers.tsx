@@ -30,8 +30,10 @@ function LanguageBridge({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("ledgerai-language");
-    if (stored === "en" || stored === "gu") {
+    const stored =
+      window.localStorage.getItem("koshpilot-language") ||
+      window.localStorage.getItem("ledgerai-language");
+    if (stored === "en" || stored === "gu" || stored === "hi" || stored === "mr") {
       dispatch(setLanguage(stored));
     }
   }, [dispatch]);
@@ -39,7 +41,7 @@ function LanguageBridge({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = "ltr";
-    window.localStorage.setItem("ledgerai-language", language);
+    window.localStorage.setItem("koshpilot-language", language);
   }, [language]);
 
   return children;

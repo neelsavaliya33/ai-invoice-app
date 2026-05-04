@@ -199,7 +199,7 @@ export function InvoiceForm() {
         <FormCard title="Payment, Notes & Terms" description="Shared payment method, reminder, terms, and note fields." asForm>
           <FormGrid>
             <SelectField label="Payment method" required options={["UPI", "Bank transfer", "Cash"]} />
-            <TextField label="UPI ID" required pattern="[a-zA-Z0-9.\\-_]{2,}@[a-zA-Z]{2,}" helper="Format: name@bank" defaultValue="ledgerai@upi" />
+            <TextField label="UPI ID" required pattern="[a-zA-Z0-9.\\-_]{2,}@[a-zA-Z]{2,}" helper="Format: name@bank" defaultValue="koshpilot@upi" />
             <TextField label="Advance received" required pattern="^INR\\s?[0-9,]+$" defaultValue="INR 0" />
             <DatePickerField label="Reminder date" required defaultValue="2026-05-10" />
             <TextareaField label="Customer note" required minLength={8} defaultValue="Thank you for your business." />
@@ -215,7 +215,7 @@ export function InvoiceForm() {
           <div className="mt-6 space-y-4 rounded-2xl bg-background p-5">
             <div className="flex justify-between">
               <div>
-                <p className="font-bold">LedgerAI Demo Co.</p>
+                <p className="font-bold">KoshPilot Demo Co.</p>
                 <p className="text-sm text-muted-foreground">GSTIN 24ABCDE1234F1Z5</p>
               </div>
               <Badge tone="amber">Draft</Badge>

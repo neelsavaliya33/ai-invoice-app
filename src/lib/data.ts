@@ -79,10 +79,10 @@ export const inventory = [
 ];
 
 export const users = [
-  { name: "Neel Savaliya", email: "owner@ledgerai.app", role: "Owner", status: "Active", active: "Today", scope: "All access" },
-  { name: "Priya Patel", email: "priya@ledgerai.app", role: "Accountant", status: "Active", active: "Today", scope: "Billing, reports" },
-  { name: "Rohan Shah", email: "rohan@ledgerai.app", role: "Sales", status: "Invited", active: "Pending", scope: "Customers, invoices" },
-  { name: "Asha Mehta", email: "asha@ledgerai.app", role: "Inventory Manager", status: "Active", active: "Yesterday", scope: "Stock only" },
+  { name: "Neel Savaliya", email: "owner@koshpilot.app", role: "Owner", status: "Active", active: "Today", scope: "All access" },
+  { name: "Priya Patel", email: "priya@koshpilot.app", role: "Accountant", status: "Active", active: "Today", scope: "Billing, reports" },
+  { name: "Rohan Shah", email: "rohan@koshpilot.app", role: "Sales", status: "Invited", active: "Pending", scope: "Customers, invoices" },
+  { name: "Asha Mehta", email: "asha@koshpilot.app", role: "Inventory Manager", status: "Active", active: "Yesterday", scope: "Stock only" },
 ];
 
 export const reports = [
@@ -148,4 +148,29 @@ export const ewayBills = [
   { id: "EWB-2426-0018", invoice: "INV-1048", customer: "Kavya Textiles", transporter: "Surat Transport Co.", vehicle: "GJ05AB1234", distance: 265, validUntil: "08 May 2026", status: "Generated", amount: 82400 },
   { id: "EWB-2426-0019", invoice: "INV-1049", customer: "Mehta Traders", transporter: "Swift Cargo", vehicle: "GJ01CT8890", distance: 92, validUntil: "06 May 2026", status: "Draft", amount: 46800 },
   { id: "EWB-2426-0020", invoice: "INV-1051", customer: "Prime Mobile", transporter: "Rajkot Logistics", vehicle: "GJ03BX4401", distance: 218, validUntil: "09 May 2026", status: "Ready", amount: 74100 },
+];
+
+export const aiCreditSummary = {
+  plan: "Growth AI",
+  monthlyLimit: 1200,
+  used: 784,
+  resetDate: "01 Jun 2026",
+  warningAt: 900,
+};
+
+export const aiUsageByModule = [
+  { module: "Invoices", used: 248, limit: 360, topAction: "Draft invoice lines" },
+  { module: "Reports", used: 176, limit: 240, topAction: "Explain business summary" },
+  { module: "Inventory", used: 142, limit: 180, topAction: "Stock risk detection" },
+  { module: "E-way bills", used: 96, limit: 140, topAction: "GST and vehicle validation" },
+  { module: "Customers", used: 74, limit: 120, topAction: "Overdue reminder drafts" },
+  { module: "Payroll", used: 48, limit: 160, topAction: "Approval and variance checks" },
+];
+
+export const aiUsageLogs = [
+  { id: "AI-9081", page: "Invoices", action: "Generated invoice draft for Kavya Textiles", credits: 18, user: "Priya Patel", time: "Today, 10:42 AM", status: "Completed" },
+  { id: "AI-9080", page: "E-way bills", action: "Validated GSTIN, distance, and vehicle number", credits: 12, user: "Neel Savaliya", time: "Today, 10:18 AM", status: "Completed" },
+  { id: "AI-9079", page: "Reports", action: "Summarized sales, expenses, receivables, and stock", credits: 24, user: "Neel Savaliya", time: "Yesterday, 06:22 PM", status: "Completed" },
+  { id: "AI-9078", page: "Inventory", action: "Flagged low-stock and reorder risks", credits: 10, user: "Asha Mehta", time: "Yesterday, 04:15 PM", status: "Completed" },
+  { id: "AI-9077", page: "Customers", action: "Drafted payment reminder messages", credits: 14, user: "Rohan Shah", time: "02 May 2026", status: "Reviewed" },
 ];

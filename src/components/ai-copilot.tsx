@@ -1,13 +1,17 @@
 "use client";
 
 import { Bot, Copy, Sparkles, X } from "lucide-react";
-import { setAiOpen } from "@/store/store";
+import { consumeAiCredits, setAiOpen } from "@/store/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Button, Card, Textarea, Badge } from "./ui";
+import { CreditProgress } from "./credit-system";
 
 export function AiCopilot() {
   const open = useAppSelector((state) => state.ui.aiOpen);
+  const used = useAppSelector((state) => state.ui.aiCreditsUsed);
+  const limit = useAppSelector((state) => state.ui.aiCreditLimit);
   const dispatch = useAppDispatch();
+  const remaining = Math.max(0, limit - used);
 
   if (!open) return null;
 
@@ -27,6 +31,9 @@ export function AiCopilot() {
           <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => dispatch(setAiOpen(false))}>
             <X className="h-4 w-4" />
           </Button>
+        </div>
+        <div className="border-b p-5">
+          <CreditProgress compact />
         </div>
         <div className="flex-1 space-y-4 overflow-auto p-5">
           <div className="flex flex-wrap gap-2">
@@ -59,7 +66,9 @@ export function AiCopilot() {
         </div>
         <div className="border-t p-5">
           <Textarea placeholder="Ask about invoices, stock, reports, customers, or users..." />
-          <Button className="mt-3 w-full">Generate response</Button>
+          <Button className="mt-3 w-full" onClick={() => dispatch(consumeAiCredits(8))} disabled={remaining <= 0}>
+            {remaining <= 0 ? "AI credit limit reached" : "Generate response"}
+          </Button>
         </div>
       </aside>
     </div>

@@ -1,0 +1,25 @@
+<svg width="900" height="900" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="900" rx="80" fill="#F8FAFC"/>
+  <rect x="280" y="70" width="340" height="760" rx="56" fill="#0F172A"/>
+  <rect x="306" y="120" width="288" height="650" rx="36" fill="#F8FAFC"/>
+  <rect x="382" y="96" width="136" height="14" rx="7" fill="#334155"/>
+  <rect x="332" y="152" width="236" height="72" rx="24" fill="#0F766E"/>
+  <text x="356" y="194" fill="white" font-size="24" font-family="Arial" font-weight="700">Today</text>
+  <rect x="332" y="250" width="236" height="92" rx="24" fill="white" stroke="#D7E9E7" stroke-width="3"/>
+  <rect x="356" y="276" width="82" height="12" rx="6" fill="#64748B"/>
+  <rect x="356" y="304" width="142" height="22" rx="11" fill="#0F766E"/>
+  <rect x="332" y="366" width="236" height="92" rx="24" fill="white" stroke="#D7E9E7" stroke-width="3"/>
+  <rect x="356" y="392" width="116" height="12" rx="6" fill="#64748B"/>
+  <rect x="356" y="420" width="160" height="22" rx="11" fill="#2563EB"/>
+  <rect x="332" y="482" width="236" height="136" rx="24" fill="#111827"/>
+  <circle cx="382" cy="540" r="24" fill="#2DD4BF"/>
+  <circle cx="444" cy="540" r="24" fill="#60A5FA"/>
+  <circle cx="506" cy="540" r="24" fill="#A78BFA"/>
+  <text x="356" y="588" fill="white" font-size="20" font-family="Arial" font-weight="700">AI action ready</text>
+  <rect x="332" y="642" width="236" height="80" rx="24" fill="white" stroke="#D7E9E7" stroke-width="3"/>
+  <rect x="356" y="672" width="182" height="14" rx="7" fill="#CBD5E1"/>
+  <circle cx="190" cy="180" r="80" fill="#CCFBF1"/>
+  <circle cx="710" cy="728" r="90" fill="#DBEAFE"/>
+  <path d="M140 680L210 620L270 700L188 770L140 680Z" fill="#2DD4BF"/>
+  <path d="M690 120L768 170L730 258L650 208L690 120Z" fill="#7C3AED"/>
+</svg>

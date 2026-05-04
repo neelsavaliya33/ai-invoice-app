@@ -79,7 +79,7 @@ export function NetworkOverlay() {
         </div>
         <h2 className="mt-5 text-2xl font-bold">No internet connection</h2>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          LedgerAI is waiting for your network to reconnect. Your current screen
+          KoshPilot is waiting for your network to reconnect. Your current screen
           will stay open, and the overlay will close automatically once you are
           back online.
         </p>

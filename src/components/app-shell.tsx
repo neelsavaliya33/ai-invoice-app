@@ -12,6 +12,8 @@ import { AiCopilot } from "./ai-copilot";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./dropdown-menu";
 import { LanguageToggle } from "./language-toggle";
 import { TranslationKey, useI18n } from "@/lib/i18n";
+import { CreditWalletButton } from "./credit-system";
+import { BrandMark } from "./brand-logo";
 
 const nav = [
   { href: "/app", labelKey: "dashboard", icon: Gauge },
@@ -41,9 +43,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-72 animate-fade-up overflow-y-auto border-r bg-card p-4 lg:block">
         <Link href="/" className="mb-8 flex items-center gap-3 rounded-2xl bg-primary/10 p-3 text-primary">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary text-primary-foreground font-bold">L</div>
+          <BrandMark />
           <div>
-            <p className="font-bold text-foreground">LedgerAI</p>
+            <p className="font-bold text-foreground">KoshPilot</p>
             <p className="text-xs text-muted-foreground">{t("invoiceOs")}</p>
           </div>
         </Link>
@@ -78,6 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Bot className="h-5 w-5 shrink-0" aria-hidden="true" />
               {t("aiCopilot")}
             </Button>
+            <CreditWalletButton />
             <LanguageToggle />
             <ThemeToggle />
             <Button variant="ghost" className="h-11 w-11 p-0">

@@ -6,6 +6,13 @@ import { Button, Card, SectionTitle } from "@/components/ui";
 import { CheckboxCard, FormCard, FormGrid, SelectField, TextareaField, TextField } from "@/components/form-kit";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import {
+  CreditInsightCard,
+  CreditSettingsPanel,
+  CreditSummaryCards,
+  CreditUsageByPage,
+  CreditUsageTable,
+} from "@/components/credit-system";
 
 export default function SettingsPage() {
   const theme = useAppSelector((state) => state.ui.theme);
@@ -14,15 +21,16 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <SectionTitle title={t("settings")} subtitle={t("settingsSubtitle")} />
+      <CreditSummaryCards />
       <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
         <FormCard title="Company profile" description="Reusable settings form for company identity and invoice defaults." asForm>
           <FormGrid>
-            <TextField label="Company name" required minLength={3} defaultValue="LedgerAI Demo Co." />
-            <TextField label="Legal name" required minLength={3} defaultValue="LedgerAI Demo Private Limited" />
+            <TextField label="Company name" required minLength={3} defaultValue="KoshPilot Demo Co." />
+            <TextField label="Legal name" required minLength={3} defaultValue="KoshPilot Demo Private Limited" />
             <TextField label="GSTIN" required pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]" defaultValue="24ABCDE1234F1Z5" />
             <TextField label="PAN" required pattern="[A-Z]{5}[0-9]{4}[A-Z]" defaultValue="ABCDE1234F" />
             <TextField label="Phone" required type="tel" pattern="^\\+91\\s?[0-9\\s]{10,14}$" defaultValue="+91 98765 43210" />
-            <TextField label="Email" required type="email" defaultValue="hello@ledgerai.app" />
+            <TextField label="Email" required type="email" defaultValue="hello@koshpilot.app" />
             <TextField label="Invoice prefix" required pattern="[A-Z]{2,6}" defaultValue="INV" />
             <TextField label="Next invoice number" required type="number" min={1} defaultValue="1053" />
             <TextareaField label="Default notes" required minLength={8} defaultValue="Thank you for your business." />
@@ -31,6 +39,8 @@ export default function SettingsPage() {
           <Button type="submit" className="mt-5">Save company</Button>
         </FormCard>
         <div className="space-y-6">
+          <CreditSettingsPanel />
+          <CreditInsightCard />
           <Card className="p-5">
             <h2 className="text-xl font-bold">Theme preference</h2>
             <p className="mt-2 text-sm text-muted-foreground">System follows your device appearance settings.</p>
@@ -60,6 +70,13 @@ export default function SettingsPage() {
             </div>
           </Card>
         </div>
+      </div>
+      <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+        <CreditUsageByPage />
+        <Card className="p-5">
+          <h2 className="mb-4 text-xl font-bold">{t("recentAiRequests")}</h2>
+          <CreditUsageTable />
+        </Card>
       </div>
     </div>
   );

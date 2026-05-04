@@ -8,6 +8,7 @@ import { CheckboxCard, FormCard, FormGrid, TextField } from "@/components/form-k
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useI18n } from "@/lib/i18n";
+import { BrandMark } from "@/components/brand-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,9 +18,9 @@ export default function LoginPage() {
     <main className="min-h-screen bg-background">
       <header className="container-shell flex h-20 items-center justify-between">
         <Link href="/" className="flex items-center gap-3 text-primary">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary text-primary-foreground font-bold">L</div>
+          <BrandMark />
           <div>
-            <p className="text-xl font-bold">LedgerAI</p>
+            <p className="text-xl font-bold">KoshPilot</p>
             <p className="text-xs text-muted-foreground">{t("invoiceOs")}</p>
           </div>
         </Link>
@@ -50,7 +51,7 @@ export default function LoginPage() {
 
         <FormCard title={t("loginTitle")} description={t("loginSubtitle")} asForm className="mx-auto w-full max-w-md">
           <FormGrid columns={1}>
-            <TextField label={t("loginEmail")} name="email" required type="email" defaultValue="owner@ledgerai.app" />
+            <TextField label={t("loginEmail")} name="email" required type="email" defaultValue="owner@koshpilot.app" />
             <TextField label={t("loginPassword")} name="password" required type="password" minLength={8} defaultValue="demo@1234" />
             <div className="flex items-center justify-between gap-4">
               <CheckboxCard label={t("rememberMe")} defaultChecked />
