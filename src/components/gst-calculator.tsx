@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Calculator, Delete, Divide, IndianRupee, Minus, Percent, Plus, RotateCcw, X } from "lucide-react";
+import { Calculator, Divide, IndianRupee, Minus, Percent, Plus, X } from "lucide-react";
 import { Button, Badge } from "@/components/ui";
 import { currency } from "@/lib/utils";
 import {
@@ -281,7 +281,15 @@ export function GstCalculator() {
           <span className="hidden xl:inline">GST Calc</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[min(92vw,440px)] p-4" data-gst-calculator-panel="true">
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(92vw,440px)] p-4"
+        data-gst-calculator-panel="true"
+        onEscapeKeyDown={(event) => {
+          event.preventDefault();
+          clear();
+        }}
+      >
         <DropdownMenuLabel>
           <span className="block text-base text-foreground">GST calculator</span>
           <span className="block text-xs font-normal text-muted-foreground">
@@ -336,11 +344,11 @@ export function GstCalculator() {
                 <span className="text-[9px] opacity-75">Ctrl -</span>
               </span>
             </GstKey>
-            <GstKey className="bg-amber-500 text-slate-950 hover:bg-amber-400" onClick={backspace}>
-              <Delete className="h-4 w-4" />
+            <GstKey className="bg-amber-500 text-slate-50 hover:bg-amber-400" onClick={backspace} title="Remove last digit with Backspace">
+              DEL
             </GstKey>
-            <GstKey className="bg-lime-500 text-slate-950 hover:bg-lime-400" onClick={clear}>
-              <RotateCcw className="h-4 w-4" />
+            <GstKey className="bg-lime-500 text-slate-50 hover:bg-lime-400" onClick={clear} title="Reset calculator with Escape">
+              AC
             </GstKey>
 
             <GstKey onClick={() => inputDigit("7")}>7</GstKey>
