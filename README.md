@@ -141,6 +141,69 @@ Navigation should remain practical and module-first:
 
 Keep navigation labels translated through `src/lib/i18n.ts`.
 
+### Sidebar Keyboard Shortcuts
+
+Sidebar routes support simple `Alt + key` shortcuts inside the app shell.
+
+Current bindings:
+
+- `Alt + 1`: Dashboard
+- `Alt + 2`: Invoices
+- `Alt + 3`: Customers
+- `Alt + 4`: Inventory
+- `Alt + 5`: Accounting
+- `Alt + 6`: Expenses
+- `Alt + 7`: Purchases
+- `Alt + 8`: Payments
+- `Alt + 9`: Banking
+- `Alt + 0`: GST / Tax
+- `Alt + Q`: E-way Bills
+- `Alt + W`: Reports
+- `Alt + E`: User Management
+- `Alt + R`: Employees
+- `Alt + T`: Payroll
+- `Alt + Y`: Settings
+
+Shortcut badges are shown next to sidebar labels. The handler ignores form inputs, textareas, editable content, and the GST calculator panel so typing and calculator usage stay predictable.
+
+## Global GST Calculator
+
+Implemented in `src/components/gst-calculator.tsx` and mounted globally from `src/components/app-shell.tsx`.
+
+The calculator is designed for Indian billing workflows and behaves like a desk calculator:
+
+- Number keypad with `0-9`, `00`, and decimal
+- Arithmetic keys: add, subtract, multiply, divide, equals
+- Clear and backspace actions
+- Built-in GST add and GST remove actions
+- Preset Indian GST rates: `0%`, `3%`, `5%`, `12%`, `18%`, `28%`
+- Live breakdown for taxable amount, GST amount, CGST, SGST, and final total
+- Responsive header trigger with icon on small screens and full label on large screens
+- Opaque dropdown styling for dark and light mode
+
+Calculator keyboard bindings work while the calculator dropdown is open:
+
+- Numbers: `0-9`
+- Decimal: `.`
+- Operators: `+`, `-`, `*` or `x`, `/`
+- Result: `Enter` or `=`
+- Backspace: `Backspace`
+- Clear/reset: `Escape`, `Delete`, or `C`
+- GST add: `Ctrl + +`
+- GST remove: `Ctrl + -`
+- GST rate presets:
+  - `F1`: `0%`
+  - `F2`: `3%`
+  - `F3`: `5%`
+  - `F4`: `12%`
+  - `F5`: `18%`
+  - `F6`: `28%`
+- Legacy quick keys:
+  - `A`: GST add
+  - `R`: GST remove
+
+When the calculator is open, sidebar shortcuts are disabled to avoid conflicts.
+
 ## Common AI Credit Wallet
 
 KoshPilot uses one shared AI credit wallet across AI actions.

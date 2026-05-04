@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, Bot, Boxes, BriefcaseBusiness, Building2, CreditCard, FileText, Gauge, HandCoins, Landmark, ReceiptText, Search, Settings, ShoppingBag, Truck, Users, UserCog, ChartNoAxesCombined } from "lucide-react";
 import { setAiOpen } from "@/store/store";
 import { useAppDispatch } from "@/store/hooks";
@@ -14,30 +15,50 @@ import { LanguageToggle } from "./language-toggle";
 import { TranslationKey, useI18n } from "@/lib/i18n";
 import { CreditWalletButton } from "./credit-system";
 import { BrandMark } from "./brand-logo";
+import { GstCalculator } from "./gst-calculator";
 
 const nav = [
-  { href: "/app", labelKey: "dashboard", icon: Gauge },
-  { href: "/app/invoices", labelKey: "invoices", icon: FileText },
-  { href: "/app/customers", labelKey: "customers", icon: Users },
-  { href: "/app/inventory", labelKey: "inventory", icon: Boxes },
-  { href: "/app/accounting", labelKey: "accounting", icon: Landmark },
-  { href: "/app/expenses", labelKey: "expenses", icon: ReceiptText },
-  { href: "/app/purchases", labelKey: "purchases", icon: ShoppingBag },
-  { href: "/app/payments", labelKey: "payments", icon: CreditCard },
-  { href: "/app/banking", labelKey: "banking", icon: Building2 },
-  { href: "/app/tax", labelKey: "taxGst", icon: FileText },
-  { href: "/app/eway-bills", labelKey: "ewayBills", icon: Truck },
-  { href: "/app/reports", labelKey: "reports", icon: ChartNoAxesCombined },
-  { href: "/app/users", labelKey: "userManagement", icon: UserCog },
-  { href: "/app/employees", labelKey: "employees", icon: BriefcaseBusiness },
-  { href: "/app/payroll", labelKey: "payroll", icon: HandCoins },
-  { href: "/app/settings", labelKey: "settings", icon: Settings },
+  { href: "/app", labelKey: "dashboard", icon: Gauge, shortcut: "1" },
+  { href: "/app/invoices", labelKey: "invoices", icon: FileText, shortcut: "2" },
+  { href: "/app/customers", labelKey: "customers", icon: Users, shortcut: "3" },
+  { href: "/app/inventory", labelKey: "inventory", icon: Boxes, shortcut: "4" },
+  { href: "/app/accounting", labelKey: "accounting", icon: Landmark, shortcut: "5" },
+  { href: "/app/expenses", labelKey: "expenses", icon: ReceiptText, shortcut: "6" },
+  { href: "/app/purchases", labelKey: "purchases", icon: ShoppingBag, shortcut: "7" },
+  { href: "/app/payments", labelKey: "payments", icon: CreditCard, shortcut: "8" },
+  { href: "/app/banking", labelKey: "banking", icon: Building2, shortcut: "9" },
+  { href: "/app/tax", labelKey: "taxGst", icon: FileText, shortcut: "0" },
+  { href: "/app/eway-bills", labelKey: "ewayBills", icon: Truck, shortcut: "Q" },
+  { href: "/app/reports", labelKey: "reports", icon: ChartNoAxesCombined, shortcut: "W" },
+  { href: "/app/users", labelKey: "userManagement", icon: UserCog, shortcut: "E" },
+  { href: "/app/employees", labelKey: "employees", icon: BriefcaseBusiness, shortcut: "R" },
+  { href: "/app/payroll", labelKey: "payroll", icon: HandCoins, shortcut: "T" },
+  { href: "/app/settings", labelKey: "settings", icon: Settings, shortcut: "Y" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { t } = useI18n();
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const isTypingField = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      const isCalculatorOpen = Boolean(document.querySelector("[data-gst-calculator-panel='true']"));
+      if (isTypingField || isCalculatorOpen || !event.altKey || event.ctrlKey || event.metaKey) return;
+
+      const matchedItem = nav.find((item) => item.shortcut.toLowerCase() === event.key.toLowerCase());
+      if (!matchedItem) return;
+
+      event.preventDefault();
+      router.push(matchedItem.href);
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,7 +84,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className="nav-icon" aria-hidden="true" />
-                {t(item.labelKey as TranslationKey)}
+                <span className="min-w-0 flex-1 truncate">{t(item.labelKey as TranslationKey)}</span>
+                <kbd
+                  className={cn(
+                    "rounded-md border px-1.5 py-0.5 text-[10px] font-black text-muted-foreground",
+                    active && "border-primary-foreground/25 text-primary-foreground/80",
+                  )}
+                >
+                  Alt {item.shortcut}
+                </kbd>
               </Link>
             );
           })}
@@ -81,6 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {t("aiCopilot")}
             </Button>
             <CreditWalletButton />
+            <GstCalculator />
             <LanguageToggle />
             <ThemeToggle />
             <Button variant="ghost" className="h-11 w-11 p-0">
