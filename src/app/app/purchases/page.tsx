@@ -1,16 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { AccountingAiCard, AccountingFilters, AccountingHeader, PurchaseTable } from "@/components/accounting-workflow";
 import { FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
 import { Button } from "@/components/ui";
 
 export default function PurchasesPage() {
+  const [status, setStatus] = useState("All statuses");
   return (
     <div className="space-y-6">
       <AccountingHeader titleKey="purchases" subtitleKey="purchasesSubtitle" action="New purchase" />
-      <AccountingFilters />
+      <AccountingFilters status={status} onStatusChange={setStatus} />
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <PurchaseTable />
+        <PurchaseTable status={status} />
         <AccountingAiCard text="Cotton roll A-12 is below reorder level. Convert PO-1187 balance into a supplier payment plan before placing another order." />
       </div>
       <FormCard title="Purchase bill form" description="Create supplier bill with items, GST input credit, and payable tracking." asForm>

@@ -14,6 +14,8 @@ import { ewayBills, invoices } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { currency } from "@/lib/utils";
 import { CheckCircle2, Download, FileText, Plus, Send, ShieldCheck, Truck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "./toast";
 
 const selectedInvoice = invoices[0];
 const generatedNumber = "EWB-2426-0021";
@@ -54,12 +56,12 @@ export function EwayKpis() {
   );
 }
 
-export function EwayFilters() {
+export function EwayFilters({ query, status, onQueryChange, onStatusChange }: { query?: string; status?: string; onQueryChange?: (value: string) => void; onStatusChange?: (value: string) => void }) {
   const { t } = useI18n();
   return (
     <FilterBar className="lg:grid-cols-[1fr_160px_160px_160px_auto]">
-      <TextField label={t("searchPlaceholder")} placeholder="E-way bill, invoice, vehicle" />
-      <SelectField label={t("status")} defaultValue="All" options={["All", "Draft", "Ready", "Generated", "Expired"]} />
+      <TextField label={t("searchPlaceholder")} value={query} placeholder="E-way bill, invoice, vehicle" onInput={(event) => onQueryChange?.(event.currentTarget.value)} />
+      <SelectField label={t("status")} value={status} defaultValue="All" options={["All", "Draft", "Ready", "Generated", "Expired"]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
       <DatePickerField label={t("dispatchDate")} />
       <SelectField label={t("supplyType")} defaultValue="Outward" options={["Outward", "Inward", "Job work", "Sales return"]} />
       <Button variant="secondary" className="self-end">{t("applyFilters")}</Button>
@@ -67,12 +69,17 @@ export function EwayFilters() {
   );
 }
 
-export function EwayTable() {
+export function EwayTable({ query = "", status = "All", extraBills = [] }: { query?: string; status?: string; extraBills?: typeof ewayBills }) {
   const { t } = useI18n();
+  const rows = [...ewayBills, ...extraBills].filter((bill) => {
+    const matchesQuery = `${bill.id} ${bill.invoice} ${bill.customer} ${bill.vehicle}`.toLowerCase().includes(query.toLowerCase());
+    const matchesStatus = status === "All" || bill.status === status;
+    return matchesQuery && matchesStatus;
+  });
   return (
     <DataTable
       headers={[t("ewayBill"), t("invoice"), t("customer"), t("vehicle"), t("distance"), t("amount"), t("validUntil"), t("status")]}
-      rows={ewayBills.map((bill) => [
+      rows={rows.map((bill) => [
         <span key="id" className="font-semibold">{bill.id}</span>,
         bill.invoice,
         bill.customer,
@@ -86,14 +93,46 @@ export function EwayTable() {
   );
 }
 
-export function EwayGenerator() {
+export function EwayGenerator({ onDraftCreated }: { onDraftCreated?: (bill: (typeof ewayBills)[number]) => void }) {
   const { t } = useI18n();
+  const [draft, setDraft] = useState({
+    id: generatedNumber,
+    invoice: selectedInvoice.id,
+    customer: selectedInvoice.customer,
+    vehicle: "GJ05AB1234",
+    distance: 265,
+    amount: selectedInvoice.amount,
+  });
+  const previewRows = useMemo(() => [
+    [t("invoice"), draft.invoice],
+    [t("party"), draft.customer],
+    [t("value"), currency(draft.amount)],
+    [t("transport"), `Road, ${draft.distance} km`],
+    [t("vehicle"), draft.vehicle],
+    [t("validUntil"), "08 May 2026"],
+  ], [draft, t]);
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <FormCard
         title={t("directEwayGeneration")}
         description={t("directEwayDescription")}
         asForm
+        successMessage="E-way draft generated"
+        onValidSubmit={(values) => {
+          const nextDraft = {
+            id: generatedNumber,
+            invoice: values["document-number"] || selectedInvoice.id,
+            customer: values["ship-to"] || selectedInvoice.customer,
+            transporter: values["transporter-name"] || "Surat Transport Co.",
+            vehicle: values["vehicle-number"] || "GJ05AB1234",
+            distance: Number(values["distance-km"] || 265),
+            validUntil: "08 May 2026",
+            status: "Draft",
+            amount: Number(values["total-invoice-value"] || selectedInvoice.amount),
+          };
+          setDraft(nextDraft);
+          onDraftCreated?.(nextDraft);
+        }}
       >
         <FormGrid columns={3}>
           <SelectField label={t("invoice")} required defaultValue={selectedInvoice.id} options={invoices.map((invoice) => `${invoice.id} - ${invoice.customer}`)} />
@@ -123,7 +162,7 @@ export function EwayGenerator() {
             <Truck className="h-4 w-4" />
             {t("generateDraft")}
           </Button>
-          <Button variant="secondary">
+          <Button variant="secondary" onClick={() => toast({ tone: "success", title: "GST fields validated", description: "GSTIN, vehicle number, distance, and invoice value match demo rules." })}>
             <ShieldCheck className="h-4 w-4" />
             {t("validateGstFields")}
           </Button>
@@ -135,19 +174,12 @@ export function EwayGenerator() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">{t("generatedDraft")}</p>
-              <h2 className="mt-1 text-2xl font-bold">{generatedNumber}</h2>
+              <h2 className="mt-1 text-2xl font-bold">{draft.id}</h2>
             </div>
             <Badge tone="blue">Ready</Badge>
           </div>
           <div className="mt-5 space-y-3 rounded-2xl bg-background p-4 text-sm">
-            {[
-              [t("invoice"), selectedInvoice.id],
-              [t("party"), selectedInvoice.customer],
-              [t("value"), currency(selectedInvoice.amount)],
-              [t("transport"), "Road, 265 km"],
-              [t("vehicle"), "GJ05AB1234"],
-              [t("validUntil"), "08 May 2026"],
-            ].map(([label, value]) => (
+            {previewRows.map(([label, value]) => (
               <div key={label} className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">{label}</span>
                 <span className="text-right font-semibold">{value}</span>
@@ -155,11 +187,11 @@ export function EwayGenerator() {
             ))}
           </div>
           <div className="mt-5 grid gap-3">
-            <Button>
+            <Button variant="secondary" onClick={() => toast({ tone: "info", title: "Live portal disabled", description: "Add authenticated GST/e-way bill API credentials before live submission." })}>
               <Send className="h-4 w-4" />
               {t("submitToEwayPortal")}
             </Button>
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={() => toast({ tone: "success", title: "E-way export prepared", description: `${draft.id} JSON/PDF package is ready in demo mode.` })}>
               <Download className="h-4 w-4" />
               {t("downloadJsonPdf")}
             </Button>

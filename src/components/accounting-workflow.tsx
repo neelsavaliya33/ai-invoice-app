@@ -32,12 +32,13 @@ export function AccountingKpis() {
   );
 }
 
-export function LedgerTable() {
+export function LedgerTable({ status = "All statuses" }: { status?: string }) {
   const { t } = useI18n();
+  const rows = ledgerEntries.filter(() => status === "All statuses" || status === "Matched");
   return (
     <DataTable
       headers={[t("date"), t("account"), t("debit"), t("credit"), t("reference")]}
-      rows={ledgerEntries.map((entry) => [
+      rows={rows.map((entry) => [
         entry.date,
         <span key="account" className="font-semibold">{entry.account}</span>,
         entry.debit ? currency(entry.debit) : "-",
@@ -48,12 +49,13 @@ export function LedgerTable() {
   );
 }
 
-export function ExpenseTable() {
+export function ExpenseTable({ status = "All statuses" }: { status?: string }) {
   const { t } = useI18n();
+  const rows = expenses.filter((expense) => status === "All statuses" || expense.status === status);
   return (
     <DataTable
       headers={[t("expense"), t("vendor"), t("category"), t("date"), t("amount"), t("status")]}
-      rows={expenses.map((expense) => [
+      rows={rows.map((expense) => [
         <span key="id" className="font-semibold">{expense.id}</span>,
         expense.vendor,
         expense.category,
@@ -65,12 +67,13 @@ export function ExpenseTable() {
   );
 }
 
-export function PurchaseTable() {
+export function PurchaseTable({ status = "All statuses" }: { status?: string }) {
   const { t } = useI18n();
+  const rows = purchases.filter((purchase) => status === "All statuses" || purchase.status === status);
   return (
     <DataTable
       headers={["PO", t("supplier"), t("status"), t("date"), t("amount"), t("payable")]}
-      rows={purchases.map((purchase) => [
+      rows={rows.map((purchase) => [
         <span key="id" className="font-semibold">{purchase.id}</span>,
         purchase.supplier,
         <Badge key="status" tone={purchase.status === "Ordered" ? "amber" : purchase.status === "Partial" ? "blue" : "green"}>{purchase.status}</Badge>,
@@ -82,12 +85,13 @@ export function PurchaseTable() {
   );
 }
 
-export function PaymentTable() {
+export function PaymentTable({ status = "All statuses" }: { status?: string }) {
   const { t } = useI18n();
+  const rows = payments.filter((payment) => status === "All statuses" || payment.status === status);
   return (
     <DataTable
       headers={[t("payment"), t("party"), t("type"), t("mode"), t("date"), t("amount"), t("status")]}
-      rows={payments.map((payment) => [
+      rows={rows.map((payment) => [
         <span key="id" className="font-semibold">{payment.id}</span>,
         payment.party,
         <Badge key="type" tone={payment.type === "Received" ? "green" : "amber"}>{payment.type}</Badge>,
@@ -100,12 +104,13 @@ export function PaymentTable() {
   );
 }
 
-export function BankTable() {
+export function BankTable({ status = "All statuses" }: { status?: string }) {
   const { t } = useI18n();
+  const rows = bankTransactions.filter((txn) => status === "All statuses" || txn.status === status);
   return (
     <DataTable
       headers={[t("txn"), t("date"), t("narration"), t("type"), t("amount"), t("status")]}
-      rows={bankTransactions.map((txn) => [
+      rows={rows.map((txn) => [
         <span key="id" className="font-semibold">{txn.id}</span>,
         txn.date,
         txn.narration,
@@ -131,14 +136,14 @@ export function GstCards() {
   );
 }
 
-export function AccountingFilters() {
+export function AccountingFilters({ status, onStatusChange }: { status?: string; onStatusChange?: (status: string) => void }) {
   const { t } = useI18n();
   return (
     <FilterBar className="lg:grid-cols-5">
       <DatePickerField label={t("from")} />
       <DatePickerField label={t("to")} />
       <SelectField label={t("account")} options={["All accounts", "Sales Revenue", "Accounts Receivable", "Transport Expense", "Output GST"]} />
-      <SelectField label={t("status")} options={["All statuses", "Pending", "Paid", "Matched", "Needs review"]} />
+      <SelectField label={t("status")} value={status} options={["All statuses", "Pending", "Paid", "Matched", "Needs review", "Approved", "Received", "Ordered", "Partial", "Reconciled"]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
       <Button variant="secondary" className="self-end">{t("applyFilters")}</Button>
     </FilterBar>
   );

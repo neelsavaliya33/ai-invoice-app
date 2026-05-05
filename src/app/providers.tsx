@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { setLanguage } from "@/store/store";
 import { store } from "@/store/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { Toaster } from "@/components/toast";
 
 function ThemeBridge({ children }: { children: React.ReactNode }) {
   const theme = useAppSelector((state) => state.ui.theme);
@@ -51,7 +52,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <ThemeBridge>
-        <LanguageBridge>{children}</LanguageBridge>
+        <LanguageBridge>
+          {children}
+          <Toaster />
+        </LanguageBridge>
       </ThemeBridge>
     </Provider>
   );

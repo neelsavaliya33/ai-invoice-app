@@ -1,3 +1,5 @@
+"use client";
+
 import { InvoiceForm } from "@/components/workflow";
 import { SectionTitle } from "@/components/ui";
 

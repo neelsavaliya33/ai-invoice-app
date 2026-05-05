@@ -5,8 +5,17 @@ import { useI18n } from "@/lib/i18n";
 import { currency } from "@/lib/utils";
 import { customers, inventory, invoices, reports, users } from "@/lib/data";
 import { ArrowUpRight, Copy, Download, FileDown, MoreHorizontal, Pencil, Plus, Send, WandSparkles } from "lucide-react";
+import { toast } from "./toast";
 
 function RowOptions({ type = "record" }: { type?: string }) {
+  function notify(action: string) {
+    toast({
+      tone: action === "Archive" ? "error" : "success",
+      title: `${type} ${action.toLowerCase()} ready`,
+      description: `${action} action was applied to this local demo ${type.toLowerCase()}.`,
+    });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -16,11 +25,11 @@ function RowOptions({ type = "record" }: { type?: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{type} options</DropdownMenuLabel>
-        <DropdownMenuItem><Pencil className="h-5 w-5 shrink-0" aria-hidden="true" /> Edit</DropdownMenuItem>
-        <DropdownMenuItem><Copy className="h-5 w-5 shrink-0" aria-hidden="true" /> Duplicate</DropdownMenuItem>
-        <DropdownMenuItem><Download className="h-5 w-5 shrink-0" aria-hidden="true" /> Export</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify("Edit")}><Pencil className="h-5 w-5 shrink-0" aria-hidden="true" /> Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify("Duplicate")}><Copy className="h-5 w-5 shrink-0" aria-hidden="true" /> Duplicate</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify("Export")}><Download className="h-5 w-5 shrink-0" aria-hidden="true" /> Export</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive">Archive</DropdownMenuItem>
+        <DropdownMenuItem className="text-destructive" onClick={() => notify("Archive")}>Archive</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -47,11 +56,16 @@ export function KpiGrid() {
   );
 }
 
-export function InvoiceRows() {
+export function InvoiceRows({ query = "", status = "All" }: { query?: string; status?: string }) {
+  const filtered = invoices.filter((invoice) => {
+    const matchesQuery = `${invoice.id} ${invoice.customer}`.toLowerCase().includes(query.toLowerCase());
+    const matchesStatus = status === "All" || invoice.status === status;
+    return matchesQuery && matchesStatus;
+  });
   return (
     <DataTable
       headers={["Invoice", "Customer", "Status", "Due date", "Amount", "Actions"]}
-      rows={invoices.map((invoice) => [
+      rows={(filtered.length ? filtered : []).map((invoice) => [
         <span key="id" className="font-semibold">{invoice.id}</span>,
         invoice.customer,
         <Badge key="status" tone={invoice.status === "Overdue" ? "red" : invoice.status === "Paid" ? "green" : invoice.status === "Draft" ? "amber" : "blue"}>{invoice.status}</Badge>,
@@ -63,11 +77,18 @@ export function InvoiceRows() {
   );
 }
 
-export function CustomerRows() {
+export function CustomerRows({ query = "", type = "All types", balance = "Any balance", location = "" }: { query?: string; type?: string; balance?: string; location?: string }) {
+  const filtered = customers.filter((customer) => {
+    const matchesQuery = `${customer.name} ${customer.phone} ${customer.gstin}`.toLowerCase().includes(query.toLowerCase());
+    const matchesType = type === "All types" || customer.type === type;
+    const matchesBalance = balance === "Any balance" || (balance === "Outstanding" ? customer.balance > 0 : customer.balance === 0);
+    const matchesLocation = customer.city.toLowerCase().includes(location.toLowerCase());
+    return matchesQuery && matchesType && matchesBalance && matchesLocation;
+  });
   return (
     <DataTable
       headers={["Customer", "Type", "GSTIN", "Contact", "Balance", "Status", "Options"]}
-      rows={customers.map((customer) => [
+      rows={filtered.map((customer) => [
         <span key="name" className="font-semibold">{customer.name}</span>,
         customer.type,
         customer.gstin,
@@ -80,11 +101,17 @@ export function CustomerRows() {
   );
 }
 
-export function InventoryRows() {
+export function InventoryRows({ query = "", category = "All categories", status = "Any status" }: { query?: string; category?: string; status?: string }) {
+  const filtered = inventory.filter((item) => {
+    const matchesQuery = `${item.sku} ${item.name}`.toLowerCase().includes(query.toLowerCase());
+    const matchesCategory = category === "All categories" || item.category === category;
+    const matchesStatus = status === "Any status" || item.status === status;
+    return matchesQuery && matchesCategory && matchesStatus;
+  });
   return (
     <DataTable
       headers={["SKU", "Item", "Category", "Stock", "Reorder", "Value", "Status", "Options"]}
-      rows={inventory.map((item) => [
+      rows={filtered.map((item) => [
         <span key="sku" className="font-semibold">{item.sku}</span>,
         item.name,
         item.category,
@@ -136,7 +163,7 @@ export function AiActionCard() {
       <p className="mt-4 text-sm text-muted-foreground">
         {t("heroAiInsight")}
       </p>
-      <Button className="mt-5 w-full">{t("applySuggestion")}</Button>
+      <Button className="mt-5 w-full" onClick={() => toast({ tone: "success", title: "AI suggestion applied", description: "A local follow-up action was added to today activity." })}>{t("applySuggestion")}</Button>
     </Card>
   );
 }
@@ -232,8 +259,8 @@ export function InvoiceForm() {
             <div className="grid h-28 place-items-center rounded-2xl border border-dashed text-sm text-muted-foreground">Payment QR</div>
           </div>
           <div className="mt-5 grid gap-3">
-            <Button><Send className="h-4 w-4" /> Save and send</Button>
-            <Button variant="secondary"><FileDown className="h-4 w-4" /> Download PDF</Button>
+            <Button onClick={() => toast({ tone: "success", title: "Invoice sent", description: "Demo invoice was saved and queued for sending." })}><Send className="h-4 w-4" /> Save and send</Button>
+            <Button variant="secondary" onClick={() => toast({ tone: "success", title: "PDF generated", description: "Invoice PDF export is ready in demo mode." })}><FileDown className="h-4 w-4" /> Download PDF</Button>
           </div>
         </Card>
       </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Bot, Boxes, BriefcaseBusiness, Building2, CreditCard, FileText, Gauge, HandCoins, Landmark, ReceiptText, Search, Settings, ShoppingBag, Truck, Users, UserCog, ChartNoAxesCombined } from "lucide-react";
+import { Bell, Bot, Boxes, BriefcaseBusiness, Building2, CreditCard, FileText, Gauge, HandCoins, Landmark, Menu, ReceiptText, Search, Settings, ShoppingBag, Truck, Users, UserCog, X, ChartNoAxesCombined } from "lucide-react";
 import { setAiOpen } from "@/store/store";
 import { useAppDispatch } from "@/store/hooks";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ import { TranslationKey, useI18n } from "@/lib/i18n";
 import { CreditWalletButton } from "./credit-system";
 import { BrandMark } from "./brand-logo";
 import { GstCalculator } from "./gst-calculator";
+import { customers, employees, ewayBills, inventory, invoices, reports, users } from "@/lib/data";
 
 const nav = [
   { href: "/app", labelKey: "dashboard", icon: Gauge, shortcut: "1" },
@@ -41,6 +42,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { t } = useI18n();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const searchResults = useMemo(() => {
+    if (!search.trim()) return [];
+    const q = search.toLowerCase();
+    return [
+      ...invoices.map((item) => ({ label: `${item.id} · ${item.customer}`, type: "Invoice", href: "/app/invoices" })),
+      ...customers.map((item) => ({ label: `${item.name} · ${item.gstin}`, type: "Customer", href: "/app/customers" })),
+      ...inventory.map((item) => ({ label: `${item.sku} · ${item.name}`, type: "Inventory", href: "/app/inventory" })),
+      ...ewayBills.map((item) => ({ label: `${item.id} · ${item.vehicle}`, type: "E-way", href: "/app/eway-bills" })),
+      ...employees.map((item) => ({ label: `${item.name} · ${item.department}`, type: "Employee", href: "/app/employees" })),
+      ...users.map((item) => ({ label: `${item.name} · ${item.role}`, type: "User", href: "/app/users" })),
+      ...reports.map((item) => ({ label: item.title, type: "Report", href: "/app/reports" })),
+    ].filter((item) => `${item.label} ${item.type}`.toLowerCase().includes(q)).slice(0, 6);
+  }, [search]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -59,6 +75,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [router]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const isTypingField = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      if (event.key === "/" && !isTypingField) {
+        event.preventDefault();
+        document.getElementById("global-app-search")?.focus();
+      }
+      if (event.key === "Escape") {
+        setSearch("");
+        setMobileNavOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,9 +134,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-72">
         <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
           <div className="flex h-20 items-center gap-3 px-4 sm:px-6">
-            <div className="hidden flex-1 items-center gap-3 rounded-2xl border bg-card px-3 lg:flex">
+            <Button variant="ghost" className="h-11 w-11 p-0 lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="relative hidden flex-1 items-center gap-3 rounded-2xl border bg-card px-3 lg:flex">
               <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <input className="h-11 flex-1 bg-transparent text-sm outline-none" placeholder={t("searchPlaceholder")} />
+              <input id="global-app-search" value={search} onChange={(event) => setSearch(event.target.value)} className="h-11 flex-1 bg-transparent text-sm outline-none" placeholder={t("searchPlaceholder")} />
+              {searchResults.length ? (
+                <div className="absolute left-0 right-0 top-14 z-50 overflow-hidden rounded-2xl border bg-card p-2 shadow-2xl">
+                  {searchResults.map((result) => (
+                    <button
+                      key={`${result.type}-${result.label}`}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm hover:bg-muted"
+                      onClick={() => {
+                        router.push(result.href);
+                        setSearch("");
+                      }}
+                    >
+                      <span className="font-semibold">{result.label}</span>
+                      <span className="text-xs text-muted-foreground">{result.type}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <Button variant="secondary" onClick={() => dispatch(setAiOpen(true))}>
               <Bot className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -139,6 +192,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="animate-fade-up p-4 sm:p-6">{children}</main>
       </div>
+      {mobileNavOpen ? (
+        <div className="fixed inset-0 z-[130] bg-background/70 backdrop-blur lg:hidden">
+          <aside className="h-full w-[min(86vw,340px)] animate-fade-up overflow-y-auto border-r bg-card p-4 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between">
+              <Link href="/" className="flex items-center gap-3 text-primary" onClick={() => setMobileNavOpen(false)}>
+                <BrandMark />
+                <span className="font-bold text-foreground">KoshPilot</span>
+              </Link>
+              <Button variant="ghost" className="h-10 w-10 p-0" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <nav className="space-y-2">
+              {nav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <Icon className="nav-icon" />
+                    {t(item.labelKey as TranslationKey)}
+                  </Link>
+                );
+              })}
+            </nav>
+          </aside>
+        </div>
+      ) : null}
       <AiCopilot />
     </div>
   );

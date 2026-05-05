@@ -1,16 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { AccountingAiCard, AccountingFilters, AccountingHeader, PaymentTable } from "@/components/accounting-workflow";
 import { FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
 import { Button } from "@/components/ui";
 
 export default function PaymentsPage() {
+  const [status, setStatus] = useState("All statuses");
   return (
     <div className="space-y-6">
       <AccountingHeader titleKey="payments" subtitleKey="paymentsSubtitle" action="Record payment" />
-      <AccountingFilters />
+      <AccountingFilters status={status} onStatusChange={setStatus} />
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <PaymentTable />
+        <PaymentTable status={status} />
         <AccountingAiCard text="One cash receipt is unmatched. Match PAY-3023 to Mehta Traders or mark it as advance before month-end closing." />
       </div>
       <FormCard title="Record payment" description="Use for customer receipts, supplier payments, advances, and settlement notes." asForm>

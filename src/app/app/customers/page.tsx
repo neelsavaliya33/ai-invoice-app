@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { AiActionCard, CustomerRows, PageHeaderActions } from "@/components/workflow";
 import { Button } from "@/components/ui";
 import { FilterBar, FormCard, FormGrid, TextareaField, TextField, SelectField } from "@/components/form-kit";
@@ -7,17 +8,21 @@ import { useI18n } from "@/lib/i18n";
 
 export default function CustomersPage() {
   const { t } = useI18n();
+  const [query, setQuery] = useState("");
+  const [type, setType] = useState("All types");
+  const [balance, setBalance] = useState("Any balance");
+  const [location, setLocation] = useState("");
   return (
     <div className="space-y-6">
       <PageHeaderActions title={t("customers")} subtitle={t("manageLedgers")} button={t("addCustomer")} />
       <FilterBar>
-        <TextField label="Search" placeholder="Name, phone, or GSTIN" />
-        <SelectField label="Customer type" options={["All types", "Textile", "Retail"]} />
-        <SelectField label="Balance status" options={["Any balance", "Outstanding", "Clear"]} />
-        <TextField label="Location" placeholder="City or state" />
+        <TextField label="Search" placeholder="Name, phone, or GSTIN" onInput={(event) => setQuery(event.currentTarget.value)} />
+        <SelectField label="Customer type" options={["All types", "Textile", "Retail"]} onChange={(event) => setType(event.currentTarget.value)} />
+        <SelectField label="Balance status" options={["Any balance", "Outstanding", "Clear"]} onChange={(event) => setBalance(event.currentTarget.value)} />
+        <TextField label="Location" placeholder="City or state" onInput={(event) => setLocation(event.currentTarget.value)} />
       </FilterBar>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <CustomerRows />
+        <CustomerRows query={query} type={type} balance={balance} location={location} />
         <FormCard title="Customer profile form" description="Reusable customer form block for create and edit screens." asForm>
           <FormGrid columns={1}>
             <TextField label="Business name" required minLength={3} defaultValue="Kavya Textiles" />

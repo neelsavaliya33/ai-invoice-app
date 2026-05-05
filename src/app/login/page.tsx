@@ -55,7 +55,7 @@ export default function LoginPage() {
             <TextField label={t("loginPassword")} name="password" required type="password" minLength={8} defaultValue="demo@1234" />
             <div className="flex items-center justify-between gap-4">
               <CheckboxCard label={t("rememberMe")} defaultChecked />
-              <Link href="#" className="text-sm font-semibold text-primary hover:underline">
+              <Link href="/forgot-password" className="text-sm font-semibold text-primary hover:underline">
                 {t("forgotPassword")}
               </Link>
             </div>

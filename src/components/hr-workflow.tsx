@@ -38,12 +38,18 @@ export function HrKpis() {
   );
 }
 
-export function EmployeeTable() {
+export function EmployeeTable({ query = "", department = "All departments", status = "All statuses" }: { query?: string; department?: string; status?: string }) {
   const { t } = useI18n();
+  const rows = employees.filter((employee) => {
+    const matchesQuery = `${employee.name} ${employee.role} ${employee.department}`.toLowerCase().includes(query.toLowerCase());
+    const matchesDepartment = department === "All departments" || employee.department === department;
+    const matchesStatus = status === "All statuses" || employee.status === status;
+    return matchesQuery && matchesDepartment && matchesStatus;
+  });
   return (
     <DataTable
       headers={[t("employee"), t("role"), t("department"), t("attendance"), t("salary"), t("status")]}
-      rows={employees.map((employee) => [
+      rows={rows.map((employee) => [
         <span key="name" className="font-semibold">{employee.name}<span className="block text-xs font-normal text-muted-foreground">{employee.id}</span></span>,
         employee.role,
         employee.department,
@@ -55,12 +61,17 @@ export function EmployeeTable() {
   );
 }
 
-export function PayrollTable() {
+export function PayrollTable({ status = "All statuses", month = "All months" }: { status?: string; month?: string }) {
   const { t } = useI18n();
+  const rows = payrollRuns.filter((run) => {
+    const matchesStatus = status === "All statuses" || run.status === status;
+    const matchesMonth = month === "All months" || run.period === month;
+    return matchesStatus && matchesMonth;
+  });
   return (
     <DataTable
       headers={[t("run"), t("period"), t("employees"), t("gross"), t("deductions"), t("net"), t("status")]}
-      rows={payrollRuns.map((run) => [
+      rows={rows.map((run) => [
         <span key="id" className="font-semibold">{run.id}</span>,
         run.period,
         run.employees,
@@ -73,14 +84,14 @@ export function PayrollTable() {
   );
 }
 
-export function HrFilters() {
+export function HrFilters({ query, department, status, month, onQueryChange, onDepartmentChange, onStatusChange, onMonthChange }: { query?: string; department?: string; status?: string; month?: string; onQueryChange?: (value: string) => void; onDepartmentChange?: (value: string) => void; onStatusChange?: (value: string) => void; onMonthChange?: (value: string) => void }) {
   const { t } = useI18n();
   return (
     <FilterBar className="lg:grid-cols-5">
-      <TextField label={t("searchPlaceholder")} placeholder="Employee, role, department" />
-      <SelectField label={t("department")} options={["All departments", "Finance", "Sales", "Operations", "Support"]} />
-      <SelectField label={t("status")} options={["All statuses", "Active", "On leave", "Exited"]} />
-      <SelectField label={t("month")} options={["May 2026", "Apr 2026", "Mar 2026"]} />
+      <TextField label={t("searchPlaceholder")} value={query} placeholder="Employee, role, department" onInput={(event) => onQueryChange?.(event.currentTarget.value)} />
+      <SelectField label={t("department")} value={department} options={["All departments", "Finance", "Sales", "Operations", "Support"]} onChange={(event) => onDepartmentChange?.(event.currentTarget.value)} />
+      <SelectField label={t("status")} value={status} options={["All statuses", "Active", "On leave", "Exited", "Draft", "Paid"]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
+      <SelectField label={t("month")} value={month} options={["All months", "May 2026", "Apr 2026", "Mar 2026"]} onChange={(event) => onMonthChange?.(event.currentTarget.value)} />
       <Button variant="secondary" className="self-end">{t("applyFilters")}</Button>
     </FilterBar>
   );

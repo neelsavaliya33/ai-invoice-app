@@ -1,10 +1,60 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { Bot, Copy, Sparkles, X } from "lucide-react";
 import { consumeAiCredits, setAiOpen } from "@/store/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Button, Card, Textarea, Badge } from "./ui";
 import { CreditProgress } from "./credit-system";
+import { invoices, inventory, expenses } from "@/lib/data";
+import { currency } from "@/lib/utils";
+import { toast } from "./toast";
+
+function responseFor(prompt: string) {
+  const lower = prompt.toLowerCase();
+  const overdue = invoices.filter((invoice) => invoice.status === "Overdue");
+  const receivables = invoices.filter((invoice) => invoice.status !== "Paid").reduce((sum, invoice) => sum + invoice.amount, 0);
+  const lowStock = inventory.filter((item) => item.stock <= item.reorder);
+  const expenseTotal = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  if (lower.includes("invoice") || lower.includes("bill") || lower.includes("draft")) {
+    return {
+      title: "Generated invoice draft",
+      body: "Draft invoice for Kavya Textiles: 20 Cotton roll A-12 and 12 Denim bundle blue with 18% GST, Net 7 terms, and payment reminder on the due date.",
+      actions: ["Review line items", "Add transport charge", "Save as draft"],
+    };
+  }
+
+  if (lower.includes("sales") || lower.includes("summary") || lower.includes("report")) {
+    return {
+      title: "Business summary",
+      body: `Open receivables are ${currency(receivables)} across ${invoices.filter((invoice) => invoice.status !== "Paid").length} invoices. Expense bookings total ${currency(expenseTotal)} in the sample period. Prioritize overdue collections before new purchase commitments.`,
+      actions: ["Open reports", "Export summary", "Create collection task"],
+    };
+  }
+
+  if (lower.includes("stock") || lower.includes("inventory") || lower.includes("reorder")) {
+    return {
+      title: "Stock risk check",
+      body: `${lowStock.length} items need attention: ${lowStock.map((item) => `${item.name} (${item.stock}/${item.reorder})`).join(", ")}. Raise purchase orders before weekend demand.`,
+      actions: ["Create PO", "Notify inventory manager", "Open inventory"],
+    };
+  }
+
+  if (lower.includes("overdue") || lower.includes("receivable") || lower.includes("collect")) {
+    return {
+      title: "Collection action",
+      body: `${overdue.length} invoice is overdue now. Send a WhatsApp reminder to Kavya Textiles for ${currency(overdue[0]?.amount ?? 0)} and schedule a follow-up call today.`,
+      actions: ["Draft reminder", "Log follow-up", "Open invoices"],
+    };
+  }
+
+  return {
+    title: "Suggested next action",
+    body: "I can help with invoice drafting, sales summaries, receivable collection, stock risks, reports, and GST workflow checks. Try asking for one of those business tasks.",
+    actions: ["Draft invoice", "Summarize sales", "Find stock risks"],
+  };
+}
 
 export function AiCopilot() {
   const open = useAppSelector((state) => state.ui.aiOpen);
@@ -12,6 +62,9 @@ export function AiCopilot() {
   const limit = useAppSelector((state) => state.ui.aiCreditLimit);
   const dispatch = useAppDispatch();
   const remaining = Math.max(0, limit - used);
+  const [prompt, setPrompt] = useState("");
+  const [submittedPrompt, setSubmittedPrompt] = useState("stock risks");
+  const answer = useMemo(() => responseFor(submittedPrompt), [submittedPrompt]);
 
   if (!open) return null;
 
@@ -46,11 +99,9 @@ export function AiCopilot() {
               <Sparkles className="h-4 w-4 text-accent" />
               Suggested action
             </div>
-            <p className="text-sm text-muted-foreground">
-              Collect INR 1.74L from overdue invoices, send reminders to Kavya Textiles and Mehta Traders, and reorder cotton roll A-12 before weekend demand.
-            </p>
+            <p className="text-sm text-muted-foreground">{answer.body}</p>
             <div className="mt-4 flex gap-2">
-              <Button className="h-9">Apply</Button>
+              <Button className="h-9" onClick={() => toast({ tone: "success", title: "Action queued", description: answer.actions[0] })}>Apply</Button>
               <Button variant="secondary" className="h-9">
                 <Copy className="h-4 w-4" />
                 Copy
@@ -58,15 +109,27 @@ export function AiCopilot() {
             </div>
           </Card>
           <Card className="p-4">
-            <p className="text-sm font-semibold">Generated invoice draft</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Kavya Textiles: 20 Cotton roll A-12, 12 Denim bundle blue, 18% GST, due in 7 days.
-            </p>
+            <p className="text-sm font-semibold">{answer.title}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {answer.actions.map((action) => <Badge key={action} tone="green">{action}</Badge>)}
+            </div>
           </Card>
         </div>
         <div className="border-t p-5">
-          <Textarea placeholder="Ask about invoices, stock, reports, customers, or users..." />
-          <Button className="mt-3 w-full" onClick={() => dispatch(consumeAiCredits(8))} disabled={remaining <= 0}>
+          <Textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about invoices, stock, reports, customers, or users..." />
+          <Button
+            className="mt-3 w-full"
+            onClick={() => {
+              if (!prompt.trim()) {
+                toast({ tone: "error", title: "Prompt required", description: "Type a business question before generating an AI response." });
+                return;
+              }
+              setSubmittedPrompt(prompt);
+              dispatch(consumeAiCredits(8));
+              toast({ tone: "success", title: "AI response generated", description: "8 credits used from the shared wallet." });
+            }}
+            disabled={remaining <= 0}
+          >
             {remaining <= 0 ? "AI credit limit reached" : "Generate response"}
           </Button>
         </div>

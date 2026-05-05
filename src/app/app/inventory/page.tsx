@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { AiActionCard, InventoryRows, PageHeaderActions } from "@/components/workflow";
 import { Button } from "@/components/ui";
 import { FilterBar, FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
@@ -7,18 +8,21 @@ import { useI18n } from "@/lib/i18n";
 
 export default function InventoryPage() {
   const { t } = useI18n();
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All categories");
+  const [status, setStatus] = useState("Any status");
   return (
     <div className="space-y-6">
       <PageHeaderActions title={t("inventory")} subtitle={t("trackStock")} button={t("addItem")} />
       <FilterBar className="lg:grid-cols-5">
-        <TextField label="Search" placeholder="Item or SKU" />
-        <SelectField label="Category" options={["All categories", "Textile", "Electronics"]} />
-        <SelectField label="Stock status" options={["Any status", "Low stock", "Healthy"]} />
+        <TextField label="Search" placeholder="Item or SKU" onInput={(event) => setQuery(event.currentTarget.value)} />
+        <SelectField label="Category" options={["All categories", "Textile", "Electronics"]} onChange={(event) => setCategory(event.currentTarget.value)} />
+        <SelectField label="Stock status" options={["Any status", "Low stock", "Healthy"]} onChange={(event) => setStatus(event.currentTarget.value)} />
         <SelectField label="Warehouse" options={["All warehouses", "Main", "Shop"]} />
         <Button variant="secondary" className="self-end">Import CSV</Button>
       </FilterBar>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <InventoryRows />
+        <InventoryRows query={query} category={category} status={status} />
         <FormCard title="Item form fields" description="Reusable item form for inventory create/edit flows." asForm>
           <FormGrid columns={1}>
             <TextField label="Item name" required minLength={3} defaultValue="Cotton roll A-12" />

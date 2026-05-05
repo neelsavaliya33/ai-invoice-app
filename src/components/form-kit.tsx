@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarDays } from "lucide-react";
 import { createContext, useContext, useMemo, useState } from "react";
+import { toast } from "./toast";
 
 type Option = string | { label: string; value: string };
 type FormErrors = Record<string, string>;
@@ -127,6 +128,8 @@ export function FormCard({
   action,
   asForm = false,
   className,
+  onValidSubmit,
+  successMessage,
 }: {
   title: string;
   description?: string;
@@ -134,6 +137,8 @@ export function FormCard({
   action?: React.ReactNode;
   asForm?: boolean;
   className?: string;
+  onValidSubmit?: (values: Record<string, string>) => void;
+  successMessage?: string;
 }) {
   const [errors, setErrors] = useState<FormErrors>({});
   const validationContext = useMemo(
@@ -201,6 +206,13 @@ export function FormCard({
           setErrors(nextErrors);
           if (!Object.keys(nextErrors).length) {
             event.currentTarget.dataset.submitted = "true";
+            const values = Object.fromEntries(controls.map((control) => [control.name, control.value]));
+            onValidSubmit?.(values);
+            toast({
+              tone: "success",
+              title: successMessage ?? `${title} saved`,
+              description: "Validated successfully and stored in this demo session.",
+            });
           } else {
             const firstInvalid = event.currentTarget.querySelector<HTMLElement>(
               "[data-invalid='true']",
