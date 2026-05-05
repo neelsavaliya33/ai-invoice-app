@@ -12,8 +12,9 @@ This README documents the current design flow and implementation direction so fu
 - Tailwind CSS design tokens
 - shadcn-style local UI primitives
 - Radix dropdown/popover primitives
+- TanStack Query for cached frontend API reads
 - `react-day-picker` date picker
-- Local sample data only, no backend in v1
+- Frontend uses local sample data for records and backend lookup APIs for global dropdown resources
 
 ## Brand
 
@@ -264,6 +265,74 @@ Date picker components:
 Dropdowns:
 
 - `src/components/dropdown-menu.tsx`
+- API-backed dropdown wrapper: `src/components/lookup-select-field.tsx`
+- Lookup API hook and fallbacks: `src/lib/use-lookups.ts`
+
+## Lookup API Integration
+
+Global dropdown resources are fetched with TanStack Query from the Django backend and cached on the client. API responses use the backend-wide `{ status, data, meta }` envelope, and lookup `data` intentionally sends only active dropdown options as `{ value, label }`.
+
+Frontend files:
+
+- `src/app/providers.tsx` creates the shared `QueryClientProvider`
+- `src/lib/api.ts` stores API response types and fetch helpers
+- `src/lib/use-lookups.ts` maps lookup API resources to dropdown options with local fallbacks
+- `src/components/lookup-select-field.tsx` reuses the existing shadcn-style `SelectField`
+
+Backend endpoints:
+
+- `GET /api/lookups/`
+- `GET /api/lookups/{group}/`
+
+Group response shape:
+
+```json
+{
+  "status": "success",
+  "data": [
+    { "value": "5", "label": "5%" },
+    { "value": "18", "label": "18%" }
+  ],
+  "meta": {
+    "timestamp": "2026-05-05T09:47:05Z",
+    "statusCode": 200,
+    "version": "2026-05-05.1"
+  }
+}
+```
+
+Configured groups used by the app include:
+
+- `invoice-statuses`
+- `tax-types`
+- `customer-types`
+- `balance-statuses`
+- `item-categories`
+- `stock-statuses`
+- `warehouses`
+- `payment-methods`
+- `expense-categories`
+- `gst-rates`
+- `eway-statuses`
+- `supply-types`
+- `eway-sub-types`
+- `document-types`
+- `transport-modes`
+- `departments`
+- `employment-types`
+- `employee-statuses`
+- `payroll-statuses`
+- `user-roles`
+- `access-scopes`
+- `indian-states`
+
+Set the API base URL in `.env.local` when needed:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Dropdowns keep local fallback options so forms remain usable if the backend is offline.
 
 ## Theme Support
 
@@ -370,6 +439,25 @@ The app is usually previewed at:
 http://localhost:3000
 ```
 
+## Backend Scaffold
+
+The Django backend scaffold lives beside the frontend:
+
+```text
+../backend/
+```
+
+It includes:
+
+- Django + Django REST Framework
+- PostgreSQL configuration through `DATABASE_URL`
+- Redis cache through `django-redis`
+- Celery worker and beat configuration
+- Dockerfile and `docker-compose.yml`
+- Health API at `/api/health/`
+
+Backend setup notes are in [../backend/README.md](../backend/README.md).
+
 ## Build Verification
 
 Before finalizing UI changes, run:
@@ -412,7 +500,7 @@ When adding a feature:
 2. Add visible text keys in `src/lib/i18n.ts`.
 3. Reuse `Card`, `DataTable`, `SectionTitle`, and `form-kit`.
 4. Use `DatePickerField` for dates.
-5. Use `SelectField` for dropdowns.
+5. Use `LookupSelectField` for global dropdowns and `SelectField` only for local one-off lists.
 6. Add strict validation where forms collect data.
 7. Confirm dark/light mode.
 8. Confirm language fallback does not break.

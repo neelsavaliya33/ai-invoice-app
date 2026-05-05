@@ -10,6 +10,7 @@ import {
   TextareaField,
   TextField,
 } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { ewayBills, invoices } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { currency } from "@/lib/utils";
@@ -61,9 +62,9 @@ export function EwayFilters({ query, status, onQueryChange, onStatusChange }: { 
   return (
     <FilterBar className="lg:grid-cols-[1fr_160px_160px_160px_auto]">
       <TextField label={t("searchPlaceholder")} value={query} placeholder="E-way bill, invoice, vehicle" onInput={(event) => onQueryChange?.(event.currentTarget.value)} />
-      <SelectField label={t("status")} value={status} defaultValue="All" options={["All", "Draft", "Ready", "Generated", "Expired"]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
+      <LookupSelectField label={t("status")} group="eway-statuses" value={status} defaultValue="All" prependOptions={[{ label: "All", value: "All" }]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
       <DatePickerField label={t("dispatchDate")} />
-      <SelectField label={t("supplyType")} defaultValue="Outward" options={["Outward", "Inward", "Job work", "Sales return"]} />
+      <LookupSelectField label={t("supplyType")} group="supply-types" defaultValue="Outward" />
       <Button variant="secondary" className="self-end">{t("applyFilters")}</Button>
     </FilterBar>
   );
@@ -136,11 +137,11 @@ export function EwayGenerator({ onDraftCreated }: { onDraftCreated?: (bill: (typ
       >
         <FormGrid columns={3}>
           <SelectField label={t("invoice")} required defaultValue={selectedInvoice.id} options={invoices.map((invoice) => `${invoice.id} - ${invoice.customer}`)} />
-          <SelectField label={t("supplyType")} required defaultValue="Outward" options={["Outward", "Inward", "Job work", "Sales return", "Exhibition"]} />
-          <SelectField label={t("subType")} required defaultValue="Supply" options={["Supply", "Export", "Recipient not known", "SKD/CKD", "Line sales"]} />
+          <LookupSelectField label={t("supplyType")} group="supply-types" required defaultValue="Outward" fallbackOptions={[{ label: "Outward", value: "Outward" }, { label: "Inward", value: "Inward" }, { label: "Job work", value: "Job work" }, { label: "Sales return", value: "Sales return" }, { label: "Exhibition", value: "Exhibition" }]} />
+          <LookupSelectField label={t("subType")} group="eway-sub-types" required defaultValue="Supply" />
           <TextField label={t("fromGstin")} required pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]" defaultValue="24ABCDE1234F1Z5" />
           <TextField label={t("toGstin")} required pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]" defaultValue="24ABCDE1234F1Z5" />
-          <SelectField label={t("documentType")} required defaultValue="Tax invoice" options={["Tax invoice", "Bill of supply", "Delivery challan", "Credit note"]} />
+          <LookupSelectField label={t("documentType")} group="document-types" required defaultValue="Tax invoice" fallbackOptions={[{ label: "Tax invoice", value: "Tax invoice" }, { label: "Bill of supply", value: "Bill of supply" }, { label: "Delivery challan", value: "Delivery challan" }, { label: "Credit note", value: "Credit note" }]} />
           <TextField label={t("documentNumber")} required pattern="INV-[0-9]{4,}" defaultValue={selectedInvoice.id} />
           <DatePickerField label={t("documentDate")} required defaultValue="2026-05-04" />
           <TextField label={t("taxableValue")} required type="number" min={1} defaultValue="69831" />
@@ -150,7 +151,7 @@ export function EwayGenerator({ onDraftCreated }: { onDraftCreated?: (bill: (typ
           <TextField label={t("dispatchFrom")} required minLength={5} defaultValue="Ring Road Textile Market, Surat" />
           <TextField label={t("shipTo")} required minLength={5} defaultValue="Kavya Textiles, Ahmedabad" />
           <TextField label={t("distanceKm")} required type="number" min={1} max={4000} defaultValue="265" />
-          <SelectField label={t("transportMode")} required defaultValue="Road" options={["Road", "Rail", "Air", "Ship"]} />
+          <LookupSelectField label={t("transportMode")} group="transport-modes" required defaultValue="Road" />
           <TextField label={t("transporterName")} required minLength={3} defaultValue="Surat Transport Co." />
           <TextField label={t("transporterId")} pattern="[0-9A-Z]{5,15}" helper="Optional GST transporter ID" placeholder="24TRNSP1234Z1" />
           <TextField label={t("vehicleNumber")} required pattern="[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}" helper="Example: GJ05AB1234" defaultValue="GJ05AB1234" />

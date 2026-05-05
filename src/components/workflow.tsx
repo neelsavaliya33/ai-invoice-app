@@ -1,5 +1,6 @@
 import { Badge, Button, Card, DataTable, Input, Select, SectionTitle } from "@/components/ui";
 import { DatePickerField, FormActions, FormCard, FormGrid, SelectField, TextareaField, TextField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/dropdown-menu";
 import { useI18n } from "@/lib/i18n";
 import { currency } from "@/lib/utils";
@@ -188,14 +189,14 @@ export function InvoiceForm() {
           <FormGrid>
             <SelectField label="Customer" required defaultValue="Kavya Textiles" options={["Kavya Textiles", "Mehta Traders"]} />
             <TextField label="GSTIN" required pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]" helper="15-character GSTIN format" defaultValue="24ABCDE1234F1Z5" />
-            <SelectField label="Customer type" required defaultValue="Textile" options={["Textile", "Retail"]} />
+            <LookupSelectField label="Customer type" group="customer-types" required defaultValue="Textile" />
             <TextField label="Contact person" required minLength={3} defaultValue="Rohan Shah" />
             <TextField label="Phone number" required type="tel" pattern="^\\+91\\s?[0-9\\s]{10,14}$" helper="Use Indian mobile format, e.g. +91 98765 43210" defaultValue="+91 98765 43210" />
             <TextField label="Email" required type="email" defaultValue="accounts@kavyatextiles.in" />
             <TextField label="Billing address" required minLength={8} defaultValue="Ring Road Textile Market" />
             <TextField label="City / State" required minLength={4} defaultValue="Surat, Gujarat" />
             <TextField label="Credit limit" required pattern="^INR\\s?[0-9,]+$" helper="Format: INR 2,00,000" defaultValue="INR 2,00,000" />
-            <SelectField label="Payment terms" required defaultValue="Net 7" options={["Net 7", "Net 15", "Due on receipt"]} />
+            <LookupSelectField label="Payment terms" group="payment-terms" required defaultValue="Net 7" />
           </FormGrid>
         </FormCard>
 
@@ -204,8 +205,8 @@ export function InvoiceForm() {
             <TextField label="Invoice number" required pattern="INV-[0-9]{4,}" helper="Format: INV-1053" defaultValue="INV-1053" />
             <DatePickerField label="Invoice date" required defaultValue="2026-05-04" />
             <DatePickerField label="Due date" required defaultValue="2026-05-11" />
-            <SelectField label="Place of supply" required defaultValue="Gujarat" options={["Gujarat", "Maharashtra"]} />
-            <SelectField label="Tax type" required defaultValue="GST" options={["GST", "IGST", "No tax"]} />
+            <LookupSelectField label="Place of supply" group="indian-states" required defaultValue="Gujarat" />
+            <LookupSelectField label="Tax type" group="tax-types" required defaultValue="GST" />
             <TextField label="Salesperson" required minLength={3} defaultValue="Priya Patel" />
             <TextField label="PO number" pattern="[A-Za-z0-9\\-/]{3,}" placeholder="Optional" />
             <TextField label="E-way bill" pattern="[0-9]{12}" helper="12 digits when provided" placeholder="Optional" />
@@ -225,7 +226,7 @@ export function InvoiceForm() {
 
         <FormCard title="Payment, Notes & Terms" description="Shared payment method, reminder, terms, and note fields." asForm>
           <FormGrid>
-            <SelectField label="Payment method" required options={["UPI", "Bank transfer", "Cash"]} />
+            <LookupSelectField label="Payment method" group="payment-methods" required />
             <TextField label="UPI ID" required pattern="[a-zA-Z0-9.\\-_]{2,}@[a-zA-Z]{2,}" helper="Format: name@bank" defaultValue="koshpilot@upi" />
             <TextField label="Advance received" required pattern="^INR\\s?[0-9,]+$" defaultValue="INR 0" />
             <DatePickerField label="Reminder date" required defaultValue="2026-05-10" />

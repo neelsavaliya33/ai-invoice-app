@@ -2,6 +2,7 @@
 
 import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
 import { DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { currency } from "@/lib/utils";
 import { bankTransactions, expenses, gstSummary, ledgerEntries, payments, purchases } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
@@ -143,7 +144,7 @@ export function AccountingFilters({ status, onStatusChange }: { status?: string;
       <DatePickerField label={t("from")} />
       <DatePickerField label={t("to")} />
       <SelectField label={t("account")} options={["All accounts", "Sales Revenue", "Accounts Receivable", "Transport Expense", "Output GST"]} />
-      <SelectField label={t("status")} value={status} options={["All statuses", "Pending", "Paid", "Matched", "Needs review", "Approved", "Received", "Ordered", "Partial", "Reconciled"]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
+      <LookupSelectField label={t("status")} group="payment-statuses" value={status} prependOptions={[{ label: "All statuses", value: "All statuses" }, { label: "Needs review", value: "Needs review" }, { label: "Received", value: "Received" }, { label: "Ordered", value: "Ordered" }, { label: "Partial", value: "Partial" }, { label: "Reconciled", value: "Reconciled" }]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
       <Button variant="secondary" className="self-end">{t("applyFilters")}</Button>
     </FilterBar>
   );
@@ -156,11 +157,11 @@ export function ExpenseForm() {
       <FormGrid>
         <TextField label={t("expenseNumber")} required defaultValue="EXP-2105" pattern="EXP-[0-9]{4,}" />
         <TextField label={t("vendor")} required minLength={3} placeholder="Vendor name" />
-        <SelectField label={t("category")} required options={["Transport", "Packaging", "Office supplies", "Software", "Rent"]} />
+        <LookupSelectField label={t("category")} group="expense-categories" required />
         <DatePickerField label={t("expenseDate")} required />
         <TextField label={t("amount")} required type="number" min={1} placeholder="0" />
-        <SelectField label={t("gstRate")} required options={["0%", "5%", "12%", "18%", "28%"]} />
-        <SelectField label={t("paymentStatus")} required options={["Pending", "Paid", "Approved"]} />
+        <LookupSelectField label={t("gstRate")} group="gst-rates" required />
+        <LookupSelectField label={t("paymentStatus")} group="payment-statuses" required />
         <TextField label={t("reference")} placeholder="Bill or receipt number" />
         <TextareaField label={t("notes")} minLength={8} placeholder="Approval or accounting notes" />
       </FormGrid>

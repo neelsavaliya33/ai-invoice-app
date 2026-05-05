@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AccountingAiCard, AccountingFilters, AccountingHeader, PaymentTable } from "@/components/accounting-workflow";
 import { FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { Button } from "@/components/ui";
 
 export default function PaymentsPage() {
@@ -20,7 +21,7 @@ export default function PaymentsPage() {
           <SelectField label="Payment type" required options={["Received", "Paid"]} />
           <TextField label="Party" required minLength={3} />
           <TextField label="Payment date" required type="date" />
-          <SelectField label="Mode" required options={["UPI", "Bank", "Cash", "Cheque"]} />
+          <LookupSelectField label="Mode" group="payment-methods" required />
           <TextField label="Amount" required type="number" min={1} />
           <TextField label="Transaction ID" pattern="[A-Za-z0-9\\-/]{4,}" />
           <TextareaField label="Notes" minLength={8} />

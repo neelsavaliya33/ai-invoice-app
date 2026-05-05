@@ -2,6 +2,7 @@
 
 import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
 import { DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { employees, payrollRuns } from "@/lib/data";
 import { currency } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -89,8 +90,8 @@ export function HrFilters({ query, department, status, month, onQueryChange, onD
   return (
     <FilterBar className="lg:grid-cols-5">
       <TextField label={t("searchPlaceholder")} value={query} placeholder="Employee, role, department" onInput={(event) => onQueryChange?.(event.currentTarget.value)} />
-      <SelectField label={t("department")} value={department} options={["All departments", "Finance", "Sales", "Operations", "Support"]} onChange={(event) => onDepartmentChange?.(event.currentTarget.value)} />
-      <SelectField label={t("status")} value={status} options={["All statuses", "Active", "On leave", "Exited", "Draft", "Paid"]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
+      <LookupSelectField label={t("department")} group="departments" value={department} prependOptions={[{ label: "All departments", value: "All departments" }]} onChange={(event) => onDepartmentChange?.(event.currentTarget.value)} />
+      <LookupSelectField label={t("status")} group="employee-statuses" value={status} prependOptions={[{ label: "All statuses", value: "All statuses" }, { label: "Draft", value: "Draft" }, { label: "Paid", value: "Paid" }]} onChange={(event) => onStatusChange?.(event.currentTarget.value)} />
       <SelectField label={t("month")} value={month} options={["All months", "May 2026", "Apr 2026", "Mar 2026"]} onChange={(event) => onMonthChange?.(event.currentTarget.value)} />
       <Button variant="secondary" className="self-end">{t("applyFilters")}</Button>
     </FilterBar>
@@ -106,11 +107,11 @@ export function EmployeeForm() {
         <TextField label={t("fullName")} required minLength={3} />
         <TextField label="Email" required type="email" />
         <TextField label={t("phone")} required type="tel" pattern="^\\+91\\s?[0-9\\s]{10,14}$" />
-        <SelectField label={t("department")} required options={["Finance", "Sales", "Operations", "Support"]} />
+        <LookupSelectField label={t("department")} group="departments" required />
         <TextField label={t("role")} required minLength={3} />
         <DatePickerField label={t("joiningDate")} required />
         <TextField label={t("monthlySalary")} required type="number" min={1} />
-        <SelectField label={t("employmentType")} required options={["Full-time", "Part-time", "Contract"]} />
+        <LookupSelectField label={t("employmentType")} group="employment-types" required />
         <TextareaField label={t("hrNotes")} minLength={8} />
       </FormGrid>
       <Button type="submit" className="mt-5">{t("saveEmployee")}</Button>
@@ -129,8 +130,8 @@ export function PayrollForm() {
         <TextField label={t("grossSalary")} required type="number" min={1} />
         <TextField label={t("deductions")} required type="number" min={0} />
         <TextField label={t("reimbursements")} required type="number" min={0} />
-        <SelectField label={t("approvalStatus")} required options={["Draft", "Pending approval", "Approved", "Paid"]} />
-        <SelectField label={t("paymentMode")} required options={["Bank transfer", "Cash", "UPI"]} />
+        <LookupSelectField label={t("approvalStatus")} group="payroll-statuses" required />
+        <LookupSelectField label={t("paymentMode")} group="payment-methods" required />
         <TextareaField label={t("payrollNotes")} minLength={8} />
       </FormGrid>
       <Button type="submit" className="mt-5">{t("savePayrollRun")}</Button>

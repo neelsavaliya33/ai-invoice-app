@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { AiActionCard, CustomerRows, PageHeaderActions } from "@/components/workflow";
 import { Button } from "@/components/ui";
-import { FilterBar, FormCard, FormGrid, TextareaField, TextField, SelectField } from "@/components/form-kit";
+import { FilterBar, FormCard, FormGrid, TextareaField, TextField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { useI18n } from "@/lib/i18n";
 
 export default function CustomersPage() {
@@ -17,8 +18,8 @@ export default function CustomersPage() {
       <PageHeaderActions title={t("customers")} subtitle={t("manageLedgers")} button={t("addCustomer")} />
       <FilterBar>
         <TextField label="Search" placeholder="Name, phone, or GSTIN" onInput={(event) => setQuery(event.currentTarget.value)} />
-        <SelectField label="Customer type" options={["All types", "Textile", "Retail"]} onChange={(event) => setType(event.currentTarget.value)} />
-        <SelectField label="Balance status" options={["Any balance", "Outstanding", "Clear"]} onChange={(event) => setBalance(event.currentTarget.value)} />
+        <LookupSelectField label="Customer type" group="customer-types" prependOptions={[{ label: "All types", value: "All types" }]} onChange={(event) => setType(event.currentTarget.value)} />
+        <LookupSelectField label="Balance status" group="balance-statuses" onChange={(event) => setBalance(event.currentTarget.value)} />
         <TextField label="Location" placeholder="City or state" onInput={(event) => setLocation(event.currentTarget.value)} />
       </FilterBar>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">

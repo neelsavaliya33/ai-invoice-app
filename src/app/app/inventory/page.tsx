@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { AiActionCard, InventoryRows, PageHeaderActions } from "@/components/workflow";
 import { Button } from "@/components/ui";
-import { FilterBar, FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
+import { FilterBar, FormCard, FormGrid, TextField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { useI18n } from "@/lib/i18n";
 
 export default function InventoryPage() {
@@ -16,9 +17,9 @@ export default function InventoryPage() {
       <PageHeaderActions title={t("inventory")} subtitle={t("trackStock")} button={t("addItem")} />
       <FilterBar className="lg:grid-cols-5">
         <TextField label="Search" placeholder="Item or SKU" onInput={(event) => setQuery(event.currentTarget.value)} />
-        <SelectField label="Category" options={["All categories", "Textile", "Electronics"]} onChange={(event) => setCategory(event.currentTarget.value)} />
-        <SelectField label="Stock status" options={["Any status", "Low stock", "Healthy"]} onChange={(event) => setStatus(event.currentTarget.value)} />
-        <SelectField label="Warehouse" options={["All warehouses", "Main", "Shop"]} />
+        <LookupSelectField label="Category" group="item-categories" prependOptions={[{ label: "All categories", value: "All categories" }]} onChange={(event) => setCategory(event.currentTarget.value)} />
+        <LookupSelectField label="Stock status" group="stock-statuses" onChange={(event) => setStatus(event.currentTarget.value)} />
+        <LookupSelectField label="Warehouse" group="warehouses" />
         <Button variant="secondary" className="self-end">Import CSV</Button>
       </FilterBar>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">

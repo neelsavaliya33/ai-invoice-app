@@ -3,6 +3,7 @@
 import { AiActionCard, ReportCards } from "@/components/workflow";
 import { Button, Card, SectionTitle } from "@/components/ui";
 import { FilterBar, SelectField, TextField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { useI18n } from "@/lib/i18n";
 
 export default function ReportsPage() {
@@ -14,7 +15,7 @@ export default function ReportsPage() {
         <TextField label="From" type="date" />
         <TextField label="To" type="date" />
         <SelectField label="Customer" options={["All customers", "Kavya Textiles"]} />
-        <SelectField label="Category" options={["All categories", "Textile"]} />
+        <LookupSelectField label="Category" group="item-categories" prependOptions={[{ label: "All categories", value: "All categories" }]} />
         <Button variant="secondary" className="self-end">Schedule report</Button>
       </FilterBar>
       <div className="flex flex-wrap gap-2">

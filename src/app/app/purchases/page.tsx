@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { AccountingAiCard, AccountingFilters, AccountingHeader, PurchaseTable } from "@/components/accounting-workflow";
-import { FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
+import { FormCard, FormGrid, TextField } from "@/components/form-kit";
+import { LookupSelectField } from "@/components/lookup-select-field";
 import { Button } from "@/components/ui";
 
 export default function PurchasesPage() {
@@ -20,7 +21,7 @@ export default function PurchasesPage() {
           <TextField label="Purchase bill" required pattern="PB-[0-9]{4,}" defaultValue="PB-2201" />
           <TextField label="Supplier" required minLength={3} defaultValue="Rang Fabrics" />
           <TextField label="Bill date" required type="date" />
-          <SelectField label="GST treatment" required options={["GST", "IGST", "No tax"]} />
+          <LookupSelectField label="GST treatment" group="tax-types" required />
           <TextField label="Amount" required type="number" min={1} />
           <TextField label="Input GST" required type="number" min={0} />
         </FormGrid>

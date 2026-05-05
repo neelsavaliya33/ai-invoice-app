@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { Button, Card } from "@/components/ui";
 
-const CONNECTIVITY_URL = "https://google.com?";
+const CONNECTIVITY_URL = "https://google.com";
 const CHECK_INTERVAL_MS = 12000;
 const CHECK_TIMEOUT_MS = 3500;
 
