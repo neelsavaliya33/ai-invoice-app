@@ -90,6 +90,21 @@ export function GstCalculator() {
 
   const halfGst = roundMoney(result.gst / 2);
 
+  useEffect(() => {
+    function onGlobalKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const isTypingField = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      if (isTypingField || !event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key.toLowerCase() !== "c") return;
+
+      event.preventDefault();
+      setOpen(true);
+    }
+
+    window.addEventListener("keydown", onGlobalKeyDown);
+    return () => window.removeEventListener("keydown", onGlobalKeyDown);
+  }, []);
+
   function inputDigit(digit: string) {
     setDisplay((current) => {
       if (waitingForOperand || current === "Error") {
@@ -276,9 +291,8 @@ export function GstCalculator() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" className="h-11 min-w-11 px-3 xl:min-w-[132px] xl:justify-start">
+        <Button variant="secondary" className="h-11 min-w-11 px-3" aria-label="Open GST calculator" title="Open GST calculator with Alt + C">
           <Calculator className="h-4 w-4" />
-          <span className="hidden xl:inline">GST Calc</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -293,7 +307,7 @@ export function GstCalculator() {
         <DropdownMenuLabel>
           <span className="block text-base text-foreground">GST calculator</span>
           <span className="block text-xs font-normal text-muted-foreground">
-            Desk calculator with built-in Indian GST add and remove keys.
+            Desk calculator with built-in Indian GST add and remove keys. Shortcut: Alt + C.
           </span>
         </DropdownMenuLabel>
 

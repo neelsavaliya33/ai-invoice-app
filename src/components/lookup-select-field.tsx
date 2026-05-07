@@ -23,22 +23,13 @@ export function LookupSelectField({
   helper,
   ...props
 }: LookupSelectFieldProps) {
-  const { error, options, isError, isLoading } = useLookupOptions(group, fallbackOptions);
+  const { options } = useLookupOptions(group, fallbackOptions);
   const resolvedOptions = [...prependOptions, ...options];
-  const errorMessage =
-    error instanceof Error ? error.message : "Options could not be loaded.";
 
   return (
     <SelectField
       {...props}
-      helper={
-        helper ??
-        (isLoading
-          ? "Loading options"
-          : isError
-            ? `${errorMessage} Using saved options.`
-            : undefined)
-      }
+      helper={helper}
       options={resolvedOptions}
     />
   );

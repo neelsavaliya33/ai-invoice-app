@@ -1,20 +1,20 @@
 "use client";
 
 import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
-import { DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
+import { CloseFormButton, DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
 import { LookupSelectField } from "@/components/lookup-select-field";
 import { employees, payrollRuns } from "@/lib/data";
 import { currency } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { Plus } from "lucide-react";
 
-export function HrHeader({ type }: { type: "employees" | "payroll" }) {
+export function HrHeader({ type, onActionClick }: { type: "employees" | "payroll"; onActionClick?: () => void }) {
   const { t } = useI18n();
   return (
     <SectionTitle
       title={t(type)}
       subtitle={type === "employees" ? t("employeesSubtitle") : t("payrollSubtitle")}
-      action={<Button><Plus className="h-4 w-4" /> {type === "employees" ? t("addEmployee") : t("runPayroll")}</Button>}
+      action={<Button onClick={onActionClick}><Plus className="h-4 w-4" /> {type === "employees" ? t("addEmployee") : t("runPayroll")}</Button>}
     />
   );
 }
@@ -98,10 +98,10 @@ export function HrFilters({ query, department, status, month, onQueryChange, onD
   );
 }
 
-export function EmployeeForm() {
+export function EmployeeForm({ onClose }: { onClose?: () => void }) {
   const { t } = useI18n();
   return (
-    <FormCard title={t("employeeProfile")} description={t("employeeProfileDescription")} asForm>
+    <FormCard title={t("employeeProfile")} description={t("employeeProfileDescription")} action={onClose ? <CloseFormButton onClick={onClose} /> : undefined} asForm>
       <FormGrid columns={3}>
         <TextField label={t("employeeId")} required pattern="EMP-[0-9]{3,}" defaultValue="EMP-005" />
         <TextField label={t("fullName")} required minLength={3} />
@@ -119,10 +119,10 @@ export function EmployeeForm() {
   );
 }
 
-export function PayrollForm() {
+export function PayrollForm({ onClose }: { onClose?: () => void }) {
   const { t } = useI18n();
   return (
-    <FormCard title={t("payrollRun")} description={t("payrollRunDescription")} asForm>
+    <FormCard title={t("payrollRun")} description={t("payrollRunDescription")} action={onClose ? <CloseFormButton onClick={onClose} /> : undefined} asForm>
       <FormGrid columns={3}>
         <TextField label={t("payrollRunId")} required pattern="PAYRUN-[0-9]{4}" defaultValue="PAYRUN-0626" />
         <SelectField label={t("period")} required options={["Jun 2026", "May 2026", "Apr 2026"]} />

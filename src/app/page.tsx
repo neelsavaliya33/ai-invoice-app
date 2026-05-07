@@ -20,20 +20,19 @@ import {
   PlayCircle,
   ReceiptText,
   ShieldCheck,
-  Smartphone,
   Sparkles,
   Truck,
   Users,
   WalletCards,
 } from "lucide-react";
 import { Badge, Button, Card } from "@/components/ui";
-import { industries } from "@/lib/data";
+import { aiPlans, industries, planAddOns } from "@/lib/data";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandLogo } from "@/components/brand-logo";
 
 const simplicity = [
-  ["Access anytime, anywhere", "Your billing, inventory, accounts, payroll, and dispatch data stays ready across office, counter, and mobile workflows."],
+  ["Access from the web", "Your billing, inventory, accounts, payroll, and dispatch data stays ready across office and counter workflows."],
   ["Easy for non-accountants", "Simple forms, guided validation, and plain-language reports help owners and staff work without accounting confusion."],
   ["Fast daily operations", "Create bills, check stock, collect dues, prepare e-way drafts, and read AI summaries in minutes."],
 ] as const;
@@ -73,6 +72,7 @@ const supportItems = [
 
 function ScrollRevealRuntime() {
   useEffect(() => {
+    document.documentElement.classList.add("js-reveal-ready");
     const nodes = Array.from(document.querySelectorAll<HTMLElement>(".scroll-reveal"));
     const observer = new IntersectionObserver(
       (entries) => {
@@ -89,7 +89,10 @@ function ScrollRevealRuntime() {
       node.style.setProperty("--reveal-delay", `${Math.min(index % 4, 3) * 45}ms`);
       observer.observe(node);
     });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      document.documentElement.classList.remove("js-reveal-ready");
+    };
   }, []);
 
   return null;
@@ -107,17 +110,17 @@ export default function LandingPage() {
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-semibold text-muted-foreground lg:flex">
             <a href="#features" className="hover:text-foreground">Features</a>
-            <a href="#pricing" className="hover:text-foreground">Pricing</a>
+            <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
             <a href="#industries" className="hover:text-foreground">Industries</a>
             <a href="#support" className="hover:text-foreground">Support</a>
           </nav>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
             <ThemeToggle />
             <LanguageToggle />
             <Link className="hidden h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:inline-flex" href="/login">
               Login
             </Link>
-            <Link className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft" href="/app">
+            <Link className="hidden h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft sm:inline-flex" href="/app">
               Book Demo
             </Link>
           </div>
@@ -128,22 +131,24 @@ export default function LandingPage() {
         <section className="container-shell grid gap-12 py-16 lg:min-h-[calc(100vh-5rem)] lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="scroll-reveal">
             <Badge tone="green">AI-powered GST billing for Indian MSMEs</Badge>
-            <h1 className="text-balance mt-6 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl xl:text-7xl">
-              Easy Invoicing, Inventory, Accounting & AI
+            <h1 className="text-balance mt-6 max-w-5xl break-words text-4xl font-black leading-[1.08] tracking-tight sm:text-6xl xl:text-7xl">
+              <span className="block sm:inline">Easy Invoicing,</span>{" "}
+              <span className="block sm:inline">Inventory,</span>{" "}
+              <span className="block sm:inline">Accounting & AI</span>
               <span className="block text-primary">for small businesses in India</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
               Simplify your business with GST-ready invoices, inventory tracking, accounting workflows, e-way bill drafts, payroll, reports, and an AI Copilot in one easy-to-use app.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-soft transition hover:-translate-y-0.5" href="/app">
+              <Link className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-soft transition hover:-translate-y-0.5" href="/signup">
                 Start Free <ArrowRight className="h-4 w-4" />
               </Link>
               <Link className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border bg-card px-5 text-sm font-bold transition hover:-translate-y-0.5 hover:bg-muted" href="#features">
                 <PlayCircle className="h-4 w-4" /> Video Tour
               </Link>
             </div>
-            <div className="mt-8 flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <div className="mt-8 grid gap-3 text-sm text-muted-foreground sm:flex sm:flex-wrap">
               {["10,000+ business-ready workflow", "English + Gujarati", "Common AI credit wallet", "Dark and light mode"].map((item) => (
                 <span key={item} className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-2">
                   <BadgeCheck className="h-4 w-4 text-primary" />
@@ -250,22 +255,22 @@ export default function LandingPage() {
           <div className="scroll-reveal">
             <Image
               src="/images/ledgerai-customer-mobile.png"
-              alt="Indian shop owner checking invoices and stock alerts on mobile"
+              alt="Indian shop owner reviewing invoices and stock alerts"
               width={900}
               height={900}
               className="mx-auto aspect-square w-full max-w-lg rounded-[2rem] border object-cover shadow-soft"
             />
           </div>
           <div className="scroll-reveal">
-            <Badge tone="blue">Mobile app workflow</Badge>
-            <h2 className="text-balance mt-4 text-4xl font-black lg:text-5xl">Carry your business in your palm</h2>
+            <Badge tone="blue">Web workspace workflow</Badge>
+            <h2 className="text-balance mt-4 text-4xl font-black lg:text-5xl">Run daily work from one browser dashboard</h2>
             <p className="mt-4 leading-7 text-muted-foreground">
-              Field sales can check customer balances, shop counters can create quick invoices, dispatch teams can verify transport details, and owners can approve payroll or AI actions on the go.
+              Sales staff can check customer balances, shop counters can create quick invoices, dispatch teams can verify transport details, and owners can approve payroll or AI actions from the web app.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {["Quick invoice creation", "Customer balance before visit", "Low-stock alert", "AI summary before collection call"].map((item) => (
                 <div key={item} className="flex items-center gap-2 rounded-2xl border bg-card p-3 text-sm font-semibold">
-                  <Smartphone className="h-4 w-4 text-primary" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   {item}
                 </div>
               ))}
@@ -302,33 +307,59 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="pricing" className="container-shell grid gap-10 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <section id="pricing" className="container-shell py-20">
           <div className="scroll-reveal">
-            <Badge tone="green">Simple pricing</Badge>
-            <h2 className="text-balance mt-4 text-4xl font-black lg:text-5xl">Simple, transparent pricing for all</h2>
-            <p className="mt-4 leading-7 text-muted-foreground">
-              Invest in your business&apos;s future with cost-effective plans for billing, inventory, accounting, reports, e-way bills, payroll, and AI guidance.
+            <Badge tone="green">Competitive web-app pricing</Badge>
+            <h2 className="text-balance mt-4 text-4xl font-black lg:text-5xl">Affordable annual plans for Indian MSMEs</h2>
+            <p className="mt-4 max-w-3xl leading-7 text-muted-foreground">
+              Start free, try Professional for 14 days without a card, then choose a web plan with clear user limits, company limits, e-way bill allowance, and monthly AI credits.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/app" className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground">
-                See Pricing <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link href="/app" className="inline-flex h-11 items-center gap-2 rounded-xl border bg-card px-4 text-sm font-bold">
-                Start Free
-              </Link>
-            </div>
           </div>
-          <Card className="scroll-reveal p-8">
-            <p className="text-sm font-bold text-muted-foreground">Starting at just</p>
-            <p className="mt-3 text-6xl font-black text-primary">₹3,500</p>
-            <p className="mt-2 text-muted-foreground">Per company / year</p>
-            <div className="mt-6 grid gap-3">
-              {["GST billing and inventory", "Accounting and reports", "E-way bill draft workflow", "Common AI credit wallet"].map((item) => (
-                <div key={item} className="flex items-center gap-2 text-sm font-semibold">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  {item}
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {aiPlans.map((plan) => (
+              <Card key={plan.id} className={`scroll-reveal relative p-5 ${plan.recommended ? "border-primary bg-primary/10" : ""}`}>
+                {plan.recommended ? <Badge tone="green" className="absolute right-4 top-4">Best for most</Badge> : null}
+                <p className="text-lg font-black">{plan.name}</p>
+                <p className="mt-2 min-h-16 text-sm leading-6 text-muted-foreground">{plan.description}</p>
+                <p className="mt-5 text-3xl font-black text-primary">{plan.price}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{plan.billingPeriod}</p>
+                <div className="mt-5 grid gap-2 text-sm">
+                  <span className="font-semibold">{plan.userLimit} user{plan.userLimit > 1 ? "s" : ""}</span>
+                  <span className="font-semibold">{plan.companyLimit}{plan.id === "business" ? "+" : ""} compan{plan.companyLimit > 1 ? "ies" : "y"}</span>
+                  <span className="font-semibold">{plan.aiCreditLimit.toLocaleString("en-IN")} AI credits/month</span>
+                  <span className="font-semibold">{plan.ewayBillLimit.toLocaleString("en-IN")} e-way bills</span>
                 </div>
-              ))}
+                <div className="mt-5 grid gap-2">
+                  {plan.featureHighlights.map((item) => (
+                    <span key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-5 grid gap-2 border-t pt-4">
+                  {plan.featureDetails.slice(0, 3).map((item) => (
+                    <span key={item} className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-primary" />
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                <Link href="/signup" className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-black text-primary-foreground">
+                  {plan.id === "free" ? "Start free" : plan.id === "business" ? "Contact sales" : "Try 14 days"}
+                </Link>
+              </Card>
+            ))}
+          </div>
+          <Card className="scroll-reveal mt-6 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="font-black">Flexible add-ons</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Add seats, AI credits, e-way bills, or another company without forcing a full upgrade.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {planAddOns.map((addOn) => <Badge key={addOn.id} tone="blue">{addOn.name}: {addOn.price}</Badge>)}
+              </div>
             </div>
           </Card>
         </section>
@@ -396,9 +427,9 @@ export default function LandingPage() {
                 </div>
               </div>
               <Card className="border-slate-950/15 bg-white p-6 text-slate-950 shadow-2xl">
-                <p className="text-sm font-bold text-primary">14 Days Free Trial</p>
-                <p className="mt-3 text-5xl font-black text-slate-950">₹0</p>
-                <p className="mt-2 text-sm text-slate-500">No credit card required for the demo.</p>
+                <p className="text-sm font-bold text-primary">14 Days Professional Trial</p>
+                <p className="mt-3 text-5xl font-black text-slate-950">Rs. 0</p>
+                <p className="mt-2 text-sm text-slate-500">No card required. Account stays on Free unless upgraded.</p>
                 <div className="mt-6 grid gap-3 text-sm font-semibold text-slate-700">
                   {["Access all demo features", "Set up with sample data", "Free workflow support"].map((item) => (
                     <span key={item} className="flex items-center gap-2">
@@ -426,10 +457,10 @@ export default function LandingPage() {
           <div>
             <h3 className="font-black">Product</h3>
             <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
-              <a href="#pricing">Pricing</a>
+              <Link href="/pricing">Pricing</Link>
               <a href="#features">All Features</a>
               <a href="#industries">Industries</a>
-              <Link href="/app">Mobile Application</Link>
+              <Link href="/app">Web Application</Link>
             </div>
           </div>
           <div>
@@ -438,7 +469,7 @@ export default function LandingPage() {
               <Link href="/app">Book Demo</Link>
               <Link href="/login">Login</Link>
               <a href="#support">Support</a>
-              <a href="#pricing">Start Free</a>
+              <Link href="/signup">Start Free</Link>
             </div>
           </div>
           <div>

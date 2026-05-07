@@ -62,6 +62,9 @@ export function AiCopilot() {
   const limit = useAppSelector((state) => state.ui.aiCreditLimit);
   const dispatch = useAppDispatch();
   const remaining = Math.max(0, limit - used);
+  const percent = Math.min(100, Math.round((used / limit) * 100));
+  const requestCost = 8;
+  const blocked = remaining < requestCost;
   const [prompt, setPrompt] = useState("");
   const [submittedPrompt, setSubmittedPrompt] = useState("stock risks");
   const answer = useMemo(() => responseFor(submittedPrompt), [submittedPrompt]);
@@ -87,6 +90,15 @@ export function AiCopilot() {
         </div>
         <div className="border-b p-5">
           <CreditProgress compact />
+          {percent >= 100 || blocked ? (
+            <div className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              AI credit limit reached. Top up credits or upgrade your plan to continue.
+            </div>
+          ) : percent >= 80 ? (
+            <div className="mt-4 rounded-2xl border border-secondary/40 bg-secondary/10 p-3 text-sm text-secondary-foreground">
+              AI usage is above 80%. Consider a top-up before the wallet reaches zero.
+            </div>
+          ) : null}
         </div>
         <div className="flex-1 space-y-4 overflow-auto p-5">
           <div className="flex flex-wrap gap-2">
@@ -124,13 +136,17 @@ export function AiCopilot() {
                 toast({ tone: "error", title: "Prompt required", description: "Type a business question before generating an AI response." });
                 return;
               }
+              if (blocked) {
+                toast({ tone: "error", title: "AI credit limit reached", description: "Top up credits or upgrade your plan to continue AI actions." });
+                return;
+              }
               setSubmittedPrompt(prompt);
-              dispatch(consumeAiCredits(8));
-              toast({ tone: "success", title: "AI response generated", description: "8 credits used from the shared wallet." });
+              dispatch(consumeAiCredits(requestCost));
+              toast({ tone: percent >= 80 ? "info" : "success", title: "AI response generated", description: `${requestCost} credits used from the shared wallet.` });
             }}
-            disabled={remaining <= 0}
+            disabled={blocked}
           >
-            {remaining <= 0 ? "AI credit limit reached" : "Generate response"}
+            {blocked ? "Top up or upgrade to continue" : "Generate response"}
           </Button>
         </div>
       </aside>

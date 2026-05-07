@@ -25,13 +25,16 @@ export default function LoginPage() {
           </div>
         </Link>
         <div className="flex items-center gap-3">
+          <Link href="/signup" className="hidden h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:inline-flex">
+            Create account
+          </Link>
           <LanguageToggle />
           <ThemeToggle />
         </div>
       </header>
 
       <section className="container-shell grid min-h-[calc(100vh-5rem)] gap-8 py-10 lg:grid-cols-[1fr_0.85fr] lg:items-center">
-        <div className="animate-fade-up">
+        <div className="order-2 animate-fade-up lg:order-1">
           <Badge tone="green">{t("protectedBy")}</Badge>
           <h1 className="mt-6 max-w-2xl text-5xl font-bold tracking-tight">{t("loginTrustTitle")}</h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-muted-foreground">{t("loginTrustBody")}</p>
@@ -49,7 +52,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <FormCard title={t("loginTitle")} description={t("loginSubtitle")} asForm className="mx-auto w-full max-w-md">
+        <FormCard title={t("loginTitle")} description={t("loginSubtitle")} asForm className="order-1 mx-auto w-full max-w-md lg:order-2">
           <FormGrid columns={1}>
             <TextField label={t("loginEmail")} name="email" required type="email" defaultValue="owner@koshpilot.app" />
             <TextField label={t("loginPassword")} name="password" required type="password" minLength={8} defaultValue="demo@1234" />
@@ -80,6 +83,12 @@ export default function LoginPage() {
               {t("demoLogin")}
               <ArrowRight className="h-4 w-4" />
             </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              New to KoshPilot?{" "}
+              <Link href="/signup" className="font-semibold text-primary hover:underline">
+                Create your account
+              </Link>
+            </p>
           </FormGrid>
         </FormCard>
       </section>

@@ -104,16 +104,17 @@ export function CustomerRows({ query = "", type = "All types", balance = "Any ba
 
 export function InventoryRows({ query = "", category = "All categories", status = "Any status" }: { query?: string; category?: string; status?: string }) {
   const filtered = inventory.filter((item) => {
-    const matchesQuery = `${item.sku} ${item.name}`.toLowerCase().includes(query.toLowerCase());
+    const matchesQuery = `${item.sku} ${item.serialNumber} ${item.name}`.toLowerCase().includes(query.toLowerCase());
     const matchesCategory = category === "All categories" || item.category === category;
     const matchesStatus = status === "Any status" || item.status === status;
     return matchesQuery && matchesCategory && matchesStatus;
   });
   return (
     <DataTable
-      headers={["SKU", "Item", "Category", "Stock", "Reorder", "Value", "Status", "Options"]}
+      headers={["SKU", "Serial no.", "Item", "Category", "Stock", "Reorder", "Value", "Status", "Options"]}
       rows={filtered.map((item) => [
         <span key="sku" className="font-semibold">{item.sku}</span>,
+        <span key="serial" className="font-mono text-xs font-semibold">{item.serialNumber}</span>,
         item.name,
         item.category,
         `${item.stock} ${item.unit}`,
@@ -286,8 +287,29 @@ export function ReportCards() {
   );
 }
 
-export function PageHeaderActions({ title, subtitle, button }: { title: string; subtitle: string; button: string }) {
-  return <SectionTitle title={title} subtitle={subtitle} action={<Button><Plus className="h-4 w-4" /> {button}</Button>} />;
+export function PageHeaderActions({
+  title,
+  subtitle,
+  button,
+  onButtonClick,
+}: {
+  title: string;
+  subtitle: string;
+  button: string;
+  onButtonClick?: () => void;
+}) {
+  return (
+    <SectionTitle
+      title={title}
+      subtitle={subtitle}
+      action={
+        <Button onClick={onButtonClick}>
+          <Plus className="h-4 w-4" />
+          {button}
+        </Button>
+      }
+    />
+  );
 }
 
 export function ActivityCard() {

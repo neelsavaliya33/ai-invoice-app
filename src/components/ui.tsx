@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 export function Button({
@@ -26,7 +27,7 @@ export function Button({
 }
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("animate-fade-up rounded-2xl border bg-card text-card-foreground shadow-soft", className)} {...props} />;
+  return <div className={cn("animate-fade-up min-w-0 rounded-2xl border bg-card text-card-foreground shadow-soft", className)} {...props} />;
 }
 
 export function Badge({ children, className, tone = "default" }: React.HTMLAttributes<HTMLSpanElement> & { tone?: "default" | "green" | "amber" | "red" | "blue" | "violet" }) {
@@ -61,9 +62,11 @@ export function Field({ label, children, helper, required, error }: { label: str
   );
 }
 
-export function Input({ required: _required, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn("field", props.className)} {...props} />;
-}
+export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  function Input({ required: _required, ...props }, ref) {
+    return <input ref={ref} className={cn("field", props.className)} {...props} />;
+  },
+);
 
 export function Select({ children, className, required: _required, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
@@ -80,9 +83,9 @@ export function Textarea({ required: _required, ...props }: React.TextareaHTMLAt
 export function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
   return (
     <div className="animate-fade-up flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
+      <div className="min-w-0">
         <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-        {subtitle ? <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{subtitle}</p> : null}
       </div>
       {action}
     </div>
@@ -90,13 +93,13 @@ export function SectionTitle({ title, subtitle, action }: { title: string; subti
 }
 
 export function TableShell({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("animate-fade-up overflow-hidden rounded-2xl border bg-card shadow-soft", className)}>{children}</div>;
+  return <div className={cn("animate-fade-up max-w-full overflow-x-auto rounded-2xl border bg-card shadow-soft", className)}>{children}</div>;
 }
 
 export function DataTable({ headers, rows }: { headers: string[]; rows: React.ReactNode[][] }) {
   return (
     <TableShell>
-      <table className="w-full text-left text-sm">
+      <table className="w-full min-w-[720px] text-left text-sm">
         <thead className="bg-muted/70 text-xs uppercase text-muted-foreground">
           <tr>
             {headers.map((header) => (

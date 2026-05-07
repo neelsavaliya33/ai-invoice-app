@@ -1,9 +1,9 @@
 "use client";
 
-import { Gauge, Sparkles, TrendingUp } from "lucide-react";
+import { Building2, Sparkles, TrendingUp, Truck, Users } from "lucide-react";
 import { Badge, Button, Card, DataTable } from "@/components/ui";
 import { FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
-import { aiCreditSummary, aiUsageByModule, aiUsageLogs } from "@/lib/data";
+import { aiCreditSummary, aiPlans, aiUsageLogs, companies, ewayBills, planAddOns, users } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { useAppSelector } from "@/store/hooks";
 import {
@@ -24,6 +24,11 @@ export function useCreditWallet() {
   return { used, limit, remaining, percent };
 }
 
+export function useCurrentPlan() {
+  const planId = useAppSelector((state) => state.ui.aiPlan);
+  return aiPlans.find((plan) => plan.id === planId) ?? aiPlans[0];
+}
+
 export function CreditProgress({ compact = false }: { compact?: boolean }) {
   const { t } = useI18n();
   const { used, limit, remaining, percent } = useCreditWallet();
@@ -36,17 +41,18 @@ export function CreditProgress({ compact = false }: { compact?: boolean }) {
         </span>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+        <div className={`h-full rounded-full transition-all ${percent >= 100 ? "bg-destructive" : percent >= 80 ? "bg-secondary" : "bg-primary"}`} style={{ width: `${percent}%` }} />
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
-        {remaining} {t("credits")} {t("remaining")} this month.
+        {remaining} {t("credits")} {t("remaining")} this month. {percent >= 100 ? "Top up or upgrade to continue AI actions." : percent >= 80 ? "Usage is above 80%." : ""}
       </p>
     </div>
   );
 }
 
 export function CreditWalletButton() {
-  const { remaining, percent } = useCreditWallet();
+  const { used, limit, remaining, percent } = useCreditWallet();
+  const plan = useCurrentPlan();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -59,20 +65,26 @@ export function CreditWalletButton() {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-bold">Common credit wallet</p>
-            <p className="text-xs text-muted-foreground">Shared by AI actions across all pages</p>
+            <p className="text-xs text-muted-foreground">{plan.name} plan. Shared by AI actions across all pages</p>
           </div>
-          <Badge tone={percent >= 75 ? "amber" : "green"}>{percent}% used</Badge>
+          <Badge tone={percent >= 100 ? "red" : percent >= 80 ? "amber" : "green"}>{percent}% used</Badge>
         </div>
         <div className="mt-4 rounded-2xl border bg-background p-4">
           <CreditProgress compact />
         </div>
-        <div className="mt-4 space-y-3">
-          {aiUsageByModule.slice(0, 4).map((item) => (
-            <div key={item.module} className="flex items-center justify-between gap-3 text-sm">
-              <span>{item.module}</span>
-              <span className="font-semibold">{item.used} credits</span>
-            </div>
-          ))}
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
+          <div className="rounded-xl bg-muted p-3">
+            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="mt-1 font-black">{limit}</p>
+          </div>
+          <div className="rounded-xl bg-muted p-3">
+            <p className="text-xs text-muted-foreground">Used</p>
+            <p className="mt-1 font-black">{used}</p>
+          </div>
+          <div className="rounded-xl bg-muted p-3">
+            <p className="text-xs text-muted-foreground">Left</p>
+            <p className="mt-1 font-black">{remaining}</p>
+          </div>
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -82,57 +94,62 @@ export function CreditWalletButton() {
 export function CreditSummaryCards() {
   const { t } = useI18n();
   const { used, limit, remaining, percent } = useCreditWallet();
+  const plan = useCurrentPlan();
+  const activeOrInvitedUsers = users.filter((user) => user.status === "Active" || user.status === "Invited").length;
+  const usageCards = [
+    ["Users", `${activeOrInvitedUsers}/${plan.userLimit}`, "Active + invited seats", Users, activeOrInvitedUsers >= plan.userLimit ? "red" : "green"],
+    ["AI credits", `${used}/${limit}`, `${remaining} remaining this month`, Sparkles, percent >= 100 ? "red" : percent >= 80 ? "amber" : "blue"],
+    ["Companies", `${companies.length}/${plan.companyLimit}${plan.id === "business" ? "+" : ""}`, "Company workspaces", Building2, companies.length > plan.companyLimit ? "amber" : "violet"],
+    ["E-way bills", `${ewayBills.length}/${plan.ewayBillLimit}`, "Generated this period", Truck, ewayBills.length >= plan.ewayBillLimit ? "red" : "green"],
+  ] as const;
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {[
-        [t("monthlyLimit"), limit.toLocaleString("en-IN"), "blue"],
-        [t("used"), used.toLocaleString("en-IN"), percent >= 75 ? "amber" : "green"],
-        [t("remaining"), remaining.toLocaleString("en-IN"), remaining < 150 ? "red" : "violet"],
-        [t("resetDate"), aiCreditSummary.resetDate, "default"],
-      ].map(([label, value, tone]) => (
+      {usageCards.map(([label, value, helper, Icon, tone]) => (
         <Card key={label} className="p-5">
-          <p className="text-sm text-muted-foreground">{label}</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
           <p className="mt-3 text-2xl font-bold">{value}</p>
-          <Badge className="mt-4" tone={tone as never}>Common wallet</Badge>
+          <Badge className="mt-4" tone={tone as never}>{helper}</Badge>
         </Card>
       ))}
     </div>
   );
 }
 
-export function CreditUsageByPage() {
+export function CommonCreditWalletCard() {
   const { t } = useI18n();
+  const { used, limit, remaining, percent } = useCreditWallet();
+  const plan = useCurrentPlan();
   return (
     <Card className="p-5">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold">{t("usageByPage")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">One shared wallet tracks credit use from every page.</p>
+          <h2 className="text-xl font-bold">Common AI credit wallet</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{plan.name} includes {plan.aiCreditLimit.toLocaleString("en-IN")} monthly credits. Every AI action uses this single shared balance.</p>
         </div>
-        <Gauge className="h-6 w-6 text-primary" />
+        <Badge tone={percent >= 100 ? "red" : percent >= 80 ? "amber" : "green"}>{percent}% used</Badge>
       </div>
-      <div className="space-y-4">
-        {aiUsageByModule.map((item) => {
-          const percent = usagePercent(item.used, item.limit);
-          return (
-            <div key={item.module} className="rounded-2xl border bg-background p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{item.module}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t("topAction")}: {item.topAction}
-                  </p>
-                </div>
-                <Badge tone={percent >= 80 ? "amber" : "blue"}>
-                  {item.used}/{item.limit} {t("credits")}
-                </Badge>
-              </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percent}%` }} />
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          ["Total credits", limit.toLocaleString("en-IN"), "blue"],
+          ["Used credits", used.toLocaleString("en-IN"), percent >= 75 ? "amber" : "green"],
+          ["Remaining", remaining.toLocaleString("en-IN"), remaining < 150 ? "red" : "violet"],
+        ].map(([label, value, tone]) => (
+          <div key={label} className="rounded-2xl border bg-background p-4">
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <p className="mt-2 text-2xl font-black">{value}</p>
+            <Badge className="mt-4" tone={tone as never}>{t("credits")}</Badge>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 rounded-2xl border bg-background p-4">
+        <CreditProgress compact />
+      </div>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Button variant="secondary">Top up AI credits</Button>
+        <Button variant="secondary">Upgrade plan</Button>
       </div>
     </Card>
   );
@@ -141,20 +158,42 @@ export function CreditUsageByPage() {
 export function CreditSettingsPanel() {
   const { t } = useI18n();
   const { limit } = useCreditWallet();
+  const plan = useCurrentPlan();
   return (
     <FormCard
-      title="Common credit system"
-      description="Set one shared credit wallet for AI prompts, validations, summaries, and automation across the app."
+      title="Plan and limits"
+      description="Pricing is annual, per company, and web-app only. AI uses one shared company wallet."
       asForm
     >
       <FormGrid>
-        <TextField label={t("monthlyLimit")} required type="number" min={100} defaultValue={String(limit)} />
+        <TextField label="Total AI credits" required type="number" min={100} defaultValue={String(limit)} />
         <TextField label={t("warningLimit")} required type="number" min={50} defaultValue={String(aiCreditSummary.warningAt)} />
-        <SelectField label="Plan" required defaultValue={aiCreditSummary.plan} options={["Starter AI", "Growth AI", "Business AI"]} />
-        <SelectField label="Over-limit action" required defaultValue="Warn only" options={["Warn only", "Block new prompts", "Require owner approval"]} />
+        <SelectField label="Plan" required defaultValue={plan.name} options={aiPlans.map((item) => item.name)} />
+        <SelectField label="Over-limit action" required defaultValue="Block new prompts" options={["Block new prompts", "Require owner approval"]} />
       </FormGrid>
       <Button type="submit" className="mt-5">{t("saveLimit")}</Button>
     </FormCard>
+  );
+}
+
+export function PlanAddOnCards() {
+  return (
+    <Card className="p-5">
+      <h2 className="text-xl font-bold">Add-ons</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Use add-ons instead of forcing a full upgrade when the business only needs one extra limit.</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {planAddOns.map((addOn) => (
+          <div key={addOn.id} className="rounded-2xl border bg-background p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-bold">{addOn.name}</p>
+              <Badge tone="green">{addOn.price}</Badge>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{addOn.description}</p>
+            <Button variant="secondary" className="mt-4 h-9">Add</Button>
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -162,10 +201,9 @@ export function CreditUsageTable() {
   const { t } = useI18n();
   return (
     <DataTable
-      headers={["Request", "Page", "Action", t("credits"), "User", "Time", t("status")]}
+      headers={["Request", "Action", t("credits"), "User", "Time", t("status")]}
       rows={aiUsageLogs.map((log) => [
         <span key="id" className="font-semibold">{log.id}</span>,
-        log.page,
         log.action,
         log.credits,
         log.user,
@@ -190,7 +228,7 @@ export function CreditInsightCard() {
         </div>
       </div>
       <p className="mt-4 text-sm leading-6 text-muted-foreground">
-        Invoice drafting and report summaries are the highest credit users. Keep the warning limit at 900 credits so the owner sees a prompt before usage crosses 75%.
+        AI credits are tracked as one common balance. Every invoice draft, report summary, stock risk check, and reminder uses the same wallet.
       </p>
       <Button variant="secondary" className="mt-5 w-full">
         <TrendingUp className="h-4 w-4" />

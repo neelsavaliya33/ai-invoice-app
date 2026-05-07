@@ -173,6 +173,28 @@ html {
     }
   }
 
+  @keyframes form-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(28px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes form-slide-out {
+    from {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(28px) scale(0.985);
+    }
+  }
+
   @keyframes float-soft {
     0%,
     100% {
@@ -220,6 +242,44 @@ html {
     animation: scale-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
+  .form-slide-panel {
+    transform-origin: top right;
+    will-change: opacity, transform;
+  }
+
+  .form-slide-panel[data-state="open"] {
+    animation: form-slide-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .form-slide-panel[data-state="closed"] {
+    animation: form-slide-out 220ms cubic-bezier(0.55, 0, 0.1, 1) both;
+    pointer-events: none;
+  }
+
+  @media (max-width: 767px) {
+    @keyframes form-slide-in {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes form-slide-out {
+      from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(18px) scale(0.985);
+      }
+    }
+  }
+
   .animate-float-soft {
     animation: float-soft 5s ease-in-out infinite;
   }
@@ -233,7 +293,7 @@ html {
     animation: orbit 18s linear infinite;
   }
 
-  .scroll-reveal {
+  .js-reveal-ready .scroll-reveal {
     opacity: 0;
     transform: translateY(18px);
     transition:
@@ -242,7 +302,7 @@ html {
     transition-delay: var(--reveal-delay, 0ms);
   }
 
-  .scroll-reveal.is-visible {
+  .js-reveal-ready .scroll-reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
   }
@@ -265,6 +325,7 @@ html {
     .animate-float-soft,
     .animate-text-shine,
     .animate-orbit,
+    .form-slide-panel,
     .scroll-reveal {
       animation: none;
     }

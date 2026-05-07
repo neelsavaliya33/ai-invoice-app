@@ -15,8 +15,8 @@ import {
 } from "@/components/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarDays } from "lucide-react";
-import { createContext, useContext, useMemo, useState } from "react";
+import { CalendarDays, X } from "lucide-react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "./toast";
 
 type Option = string | { label: string; value: string };
@@ -130,6 +130,7 @@ export function FormCard({
   className,
   onValidSubmit,
   successMessage,
+  showSuccessToast = true,
 }: {
   title: string;
   description?: string;
@@ -139,6 +140,7 @@ export function FormCard({
   className?: string;
   onValidSubmit?: (values: Record<string, string>) => void;
   successMessage?: string;
+  showSuccessToast?: boolean;
 }) {
   const [errors, setErrors] = useState<FormErrors>({});
   const validationContext = useMemo(
@@ -186,6 +188,7 @@ export function FormCard({
         noValidate
         className={cn(
           "animate-fade-up rounded-2xl border bg-card p-5 text-card-foreground shadow-soft",
+          "min-w-0",
           className,
         )}
         onSubmit={(event) => {
@@ -208,11 +211,13 @@ export function FormCard({
             event.currentTarget.dataset.submitted = "true";
             const values = Object.fromEntries(controls.map((control) => [control.name, control.value]));
             onValidSubmit?.(values);
-            toast({
-              tone: "success",
-              title: successMessage ?? `${title} saved`,
-              description: "Validated successfully and stored in this demo session.",
-            });
+            if (showSuccessToast) {
+              toast({
+                tone: "success",
+                title: successMessage ?? `${title} saved`,
+                description: "Validated successfully and stored in this demo session.",
+              });
+            }
           } else {
             const firstInvalid = event.currentTarget.querySelector<HTMLElement>(
               "[data-invalid='true']",
@@ -227,6 +232,54 @@ export function FormCard({
   }
 
   return <Card className={cn("p-5", className)}>{content}</Card>;
+}
+
+export function CloseFormButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      className="h-9 w-9 rounded-xl p-0"
+      onClick={onClick}
+      aria-label="Close form"
+      title="Close form"
+    >
+      <X className="h-4 w-4" />
+    </Button>
+  );
+}
+
+export function SlideFormPanel({
+  open,
+  children,
+  className,
+}: {
+  open: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const [mounted, setMounted] = useState(open);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setMounted(false), 240);
+    return () => window.clearTimeout(timeout);
+  }, [open]);
+
+  if (!mounted) return null;
+
+  return (
+    <div
+      data-state={open ? "open" : "closed"}
+      className={cn("form-slide-panel", className)}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function FormGrid({
@@ -270,7 +323,7 @@ export function TextField({
   return (
     <Field
       label={label}
-      helper={helper ?? (required ? "Required" : undefined)}
+      helper={helper}
       required={required}
       error={error}
     >
@@ -318,7 +371,7 @@ export function DatePickerField({
   return (
     <Field
       label={label}
-      helper={helper ?? (required ? "Required" : undefined)}
+      helper={helper}
       required={required}
       error={error}
     >
@@ -398,7 +451,7 @@ export function SelectField({
   return (
     <Field
       label={label}
-      helper={helper ?? (required ? "Required" : undefined)}
+      helper={helper}
       required={required}
       error={error}
     >
@@ -423,13 +476,14 @@ export function SelectField({
             )}
           >
             <span
-              className={
-                selectedValue ? "text-foreground" : "text-muted-foreground"
-              }
+              className={cn(
+                "min-w-0 truncate text-left",
+                selectedValue ? "text-foreground" : "text-muted-foreground",
+              )}
             >
               {selectedLabel || "Select option"}
             </span>
-            <span className="text-xs text-muted-foreground">Change</span>
+            <span className="shrink-0 text-xs text-muted-foreground">Change</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -480,7 +534,7 @@ export function TextareaField({
   return (
     <Field
       label={label}
-      helper={helper ?? (required ? "Required" : undefined)}
+      helper={helper}
       required={required}
       error={error}
     >

@@ -4,6 +4,7 @@ import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
 import {
   DatePickerField,
   FilterBar,
+  CloseFormButton,
   FormCard,
   FormGrid,
   SelectField,
@@ -21,14 +22,14 @@ import { toast } from "./toast";
 const selectedInvoice = invoices[0];
 const generatedNumber = "EWB-2426-0021";
 
-export function EwayHeader() {
+export function EwayHeader({ onActionClick }: { onActionClick?: () => void }) {
   const { t } = useI18n();
   return (
     <SectionTitle
       title={t("ewayBills")}
       subtitle={t("ewaySubtitle")}
       action={
-        <Button>
+        <Button onClick={onActionClick}>
           <Plus className="h-4 w-4" />
           {t("generateEwayBill")}
         </Button>
@@ -94,7 +95,7 @@ export function EwayTable({ query = "", status = "All", extraBills = [] }: { que
   );
 }
 
-export function EwayGenerator({ onDraftCreated }: { onDraftCreated?: (bill: (typeof ewayBills)[number]) => void }) {
+export function EwayGenerator({ onDraftCreated, onClose }: { onDraftCreated?: (bill: (typeof ewayBills)[number]) => void; onClose?: () => void }) {
   const { t } = useI18n();
   const [draft, setDraft] = useState({
     id: generatedNumber,
@@ -117,6 +118,7 @@ export function EwayGenerator({ onDraftCreated }: { onDraftCreated?: (bill: (typ
       <FormCard
         title={t("directEwayGeneration")}
         description={t("directEwayDescription")}
+        action={onClose ? <CloseFormButton onClick={onClose} /> : undefined}
         asForm
         successMessage="E-way draft generated"
         onValidSubmit={(values) => {

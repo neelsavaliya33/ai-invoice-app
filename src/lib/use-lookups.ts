@@ -1,7 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { fetchLookupGroup } from "@/lib/api";
+import { toast } from "@/components/toast";
 
 export type LookupSelectOption = {
   label: string;
@@ -188,6 +190,19 @@ export function useLookupOptions(
 
   const apiOptions = mapLookupOptions(query.data);
   const options = apiOptions.length ? apiOptions : fallbackOptions;
+
+  useEffect(() => {
+    if (!query.isError) return;
+    const errorMessage =
+      query.error instanceof Error
+        ? query.error.message
+        : "Options could not be loaded.";
+    toast({
+      tone: "error",
+      title: "Using saved dropdown options",
+      description: `${errorMessage} ${group} will use saved options for now.`,
+    });
+  }, [group, query.error, query.isError]);
 
   return {
     ...query,

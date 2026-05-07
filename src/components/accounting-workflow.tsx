@@ -1,16 +1,26 @@
 "use client";
 
 import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
-import { DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
+import { CloseFormButton, DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
 import { LookupSelectField } from "@/components/lookup-select-field";
 import { currency } from "@/lib/utils";
 import { bankTransactions, expenses, gstSummary, ledgerEntries, payments, purchases } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { ArrowUpRight, Plus } from "lucide-react";
 
-export function AccountingHeader({ titleKey, subtitleKey, action }: { titleKey: "accounting" | "expenses" | "purchases" | "payments" | "banking" | "taxGst"; subtitleKey: "accountingSubtitle" | "expensesSubtitle" | "purchasesSubtitle" | "paymentsSubtitle" | "bankingSubtitle" | "taxSubtitle"; action?: string }) {
+export function AccountingHeader({
+  titleKey,
+  subtitleKey,
+  action,
+  onActionClick,
+}: {
+  titleKey: "accounting" | "expenses" | "purchases" | "payments" | "banking" | "taxGst";
+  subtitleKey: "accountingSubtitle" | "expensesSubtitle" | "purchasesSubtitle" | "paymentsSubtitle" | "bankingSubtitle" | "taxSubtitle";
+  action?: string;
+  onActionClick?: () => void;
+}) {
   const { t } = useI18n();
-  return <SectionTitle title={t(titleKey)} subtitle={t(subtitleKey)} action={action ? <Button><Plus className="h-4 w-4" /> {action}</Button> : undefined} />;
+  return <SectionTitle title={t(titleKey)} subtitle={t(subtitleKey)} action={action ? <Button onClick={onActionClick}><Plus className="h-4 w-4" /> {action}</Button> : undefined} />;
 }
 
 export function AccountingKpis() {
@@ -150,10 +160,15 @@ export function AccountingFilters({ status, onStatusChange }: { status?: string;
   );
 }
 
-export function ExpenseForm() {
+export function ExpenseForm({ onClose }: { onClose?: () => void }) {
   const { t } = useI18n();
   return (
-    <FormCard title={t("expenseEntry")} description={t("expenseEntryDescription")} asForm>
+    <FormCard
+      title={t("expenseEntry")}
+      description={t("expenseEntryDescription")}
+      action={onClose ? <CloseFormButton onClick={onClose} /> : undefined}
+      asForm
+    >
       <FormGrid>
         <TextField label={t("expenseNumber")} required defaultValue="EXP-2105" pattern="EXP-[0-9]{4,}" />
         <TextField label={t("vendor")} required minLength={3} placeholder="Vendor name" />

@@ -3,12 +3,14 @@
 import { ActivityCard, AiActionCard, InvoiceRows, KpiGrid } from "@/components/workflow";
 import { Card, SectionTitle } from "@/components/ui";
 import { useI18n } from "@/lib/i18n";
+import { CompanyWorkspaceCard } from "@/components/company-switcher";
 
 export default function DashboardPage() {
   const { t } = useI18n();
   return (
     <div className="space-y-6">
       <SectionTitle title={t("businessDashboard")} subtitle={t("dashboardSubtitle")} />
+      <CompanyWorkspaceCard />
       <KpiGrid />
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">

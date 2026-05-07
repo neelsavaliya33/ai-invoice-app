@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Bot, Boxes, BriefcaseBusiness, Building2, CreditCard, FileText, Gauge, HandCoins, Landmark, Menu, ReceiptText, Search, Settings, ShoppingBag, Truck, Users, UserCog, X, ChartNoAxesCombined } from "lucide-react";
+import { Bell, Bot, Boxes, BriefcaseBusiness, Building2, CreditCard, FileText, Gauge, HandCoins, Landmark, Menu, ReceiptText, Search, Settings, ShoppingBag, Sparkles, Truck, Users, UserCog, X, ChartNoAxesCombined } from "lucide-react";
 import { setAiOpen } from "@/store/store";
 import { useAppDispatch } from "@/store/hooks";
 import { cn } from "@/lib/utils";
@@ -13,10 +13,11 @@ import { AiCopilot } from "./ai-copilot";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./dropdown-menu";
 import { LanguageToggle } from "./language-toggle";
 import { TranslationKey, useI18n } from "@/lib/i18n";
-import { CreditWalletButton } from "./credit-system";
+import { useCreditWallet } from "./credit-system";
 import { BrandMark } from "./brand-logo";
 import { GstCalculator } from "./gst-calculator";
 import { customers, employees, ewayBills, inventory, invoices, reports, users } from "@/lib/data";
+import { CompanySwitcher, useActiveCompany } from "./company-switcher";
 
 const nav = [
   { href: "/app", labelKey: "dashboard", icon: Gauge, shortcut: "1" },
@@ -42,6 +43,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { t } = useI18n();
+  const activeCompany = useActiveCompany();
+  const { remaining } = useCreditWallet();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [search, setSearch] = useState("");
   const searchResults = useMemo(() => {
@@ -94,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-hidden bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-72 animate-fade-up overflow-y-auto border-r bg-card p-4 lg:block">
         <Link href="/" className="mb-8 flex items-center gap-3 rounded-2xl bg-primary/10 p-3 text-primary">
           <BrandMark />
@@ -103,6 +106,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-muted-foreground">{t("invoiceOs")}</p>
           </div>
         </Link>
+        <div className="mb-5 rounded-3xl border bg-background p-3">
+          <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Current company</p>
+          <CompanySwitcher compact />
+        </div>
         <nav className="space-y-2">
           {nav.map((item) => {
             const Icon = item.icon;
@@ -133,11 +140,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
       <div className="lg:pl-72">
         <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
-          <div className="flex h-20 items-center gap-3 px-4 sm:px-6">
+          <div className="flex h-20 items-center gap-2 px-3 sm:gap-3 sm:px-6">
             <Button variant="ghost" className="h-11 w-11 p-0 lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation">
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="relative hidden flex-1 items-center gap-3 rounded-2xl border bg-card px-3 lg:flex">
+            <div className="relative hidden max-w-2xl flex-1 items-center gap-3 rounded-2xl border bg-card px-3 lg:flex">
               <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <input id="global-app-search" value={search} onChange={(event) => setSearch(event.target.value)} className="h-11 flex-1 bg-transparent text-sm outline-none" placeholder={t("searchPlaceholder")} />
               {searchResults.length ? (
@@ -158,17 +165,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               ) : null}
             </div>
-            <Button variant="secondary" onClick={() => dispatch(setAiOpen(true))}>
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <Button variant="secondary" className="px-3 sm:px-4" onClick={() => dispatch(setAiOpen(true))}>
               <Bot className="h-5 w-5 shrink-0" aria-hidden="true" />
-              {t("aiCopilot")}
+              <span className="hidden sm:inline">{t("aiCopilot")}</span>
             </Button>
-            <CreditWalletButton />
-            <GstCalculator />
-            <LanguageToggle />
-            <ThemeToggle />
-            <Button variant="ghost" className="h-11 w-11 p-0">
-              <Bell className="h-5 w-5 shrink-0" aria-hidden="true" />
-            </Button>
+            <div className="hidden sm:block">
+              <GstCalculator />
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="grid h-11 w-11 place-items-center rounded-2xl bg-muted text-sm font-bold outline-none ring-ring transition hover:bg-muted/80 focus:ring-2">
@@ -178,8 +182,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>
                   <span className="block text-sm text-foreground">Neel Savaliya</span>
-                  <span className="block text-xs font-normal">{t("ownerAccount")}</span>
+                  <span className="block text-xs font-normal">{activeCompany.role} · {activeCompany.name}</span>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Workspace tools</DropdownMenuLabel>
+                <div className="grid gap-2 px-2 py-1">
+                  <div className="flex items-center justify-between rounded-xl bg-muted px-3 py-2 text-sm">
+                    <span className="inline-flex items-center gap-2 font-semibold">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      AI credits
+                    </span>
+                    <span className="text-muted-foreground">{remaining} left</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <LanguageToggle />
+                    <ThemeToggle />
+                    <Button variant="ghost" className="h-11 w-11 p-0" aria-label="Notifications">
+                      <Bell className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    </Button>
+                  </div>
+                  <div className="sm:hidden">
+                    <GstCalculator />
+                  </div>
+                </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>{t("profile")}</DropdownMenuItem>
                 <DropdownMenuItem>{t("companySettings")}</DropdownMenuItem>
@@ -188,6 +213,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <DropdownMenuItem className="text-destructive">{t("signOut")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
           </div>
         </header>
         <main className="animate-fade-up p-4 sm:p-6">{children}</main>
@@ -203,6 +229,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Button variant="ghost" className="h-10 w-10 p-0" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation">
                 <X className="h-5 w-5" />
               </Button>
+            </div>
+            <div className="mb-5 rounded-3xl border bg-background p-3">
+              <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Current company</p>
+              <CompanySwitcher compact />
+            </div>
+            <div className="mb-5 flex items-center gap-3 rounded-3xl border bg-background p-3">
+              <LanguageToggle />
+              <ThemeToggle />
             </div>
             <nav className="space-y-2">
               {nav.map((item) => {

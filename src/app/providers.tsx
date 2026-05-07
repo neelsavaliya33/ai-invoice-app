@@ -3,7 +3,7 @@
 import { Provider } from "react-redux";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { setLanguage } from "@/store/store";
+import { setActiveCompany, setLanguage } from "@/store/store";
 import { store } from "@/store/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Toaster } from "@/components/toast";
@@ -50,6 +50,24 @@ function LanguageBridge({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+function CompanyBridge({ children }: { children: React.ReactNode }) {
+  const activeCompanyId = useAppSelector((state) => state.ui.activeCompanyId);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("koshpilot-active-company");
+    if (stored) {
+      dispatch(setActiveCompany(stored));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    window.localStorage.setItem("koshpilot-active-company", activeCompanyId);
+  }, [activeCompanyId]);
+
+  return children;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -69,8 +87,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <Provider store={store}>
         <ThemeBridge>
           <LanguageBridge>
-            {children}
-            <Toaster />
+            <CompanyBridge>
+              {children}
+              <Toaster />
+            </CompanyBridge>
           </LanguageBridge>
         </ThemeBridge>
       </Provider>
