@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AccountingAiCard, AccountingFilters, AccountingHeader, ExpenseForm, ExpenseTable } from "@/components/accounting-workflow";
-import { SlideFormPanel } from "@/components/form-kit";
+import { FormModal } from "@/components/form-kit";
 
 export default function ExpensesPage() {
   const [status, setStatus] = useState("All statuses");
@@ -15,9 +15,9 @@ export default function ExpensesPage() {
         <ExpenseTable status={status} />
         <AccountingAiCard text="Transport and packaging expenses increased this week. Check whether these charges should be passed into invoice additional charges." />
       </div>
-      <SlideFormPanel open={isFormOpen}>
+      <FormModal open={isFormOpen} onOpenChange={setIsFormOpen} title="Add expense">
         <ExpenseForm onClose={() => setIsFormOpen(false)} />
-      </SlideFormPanel>
+      </FormModal>
     </div>
   );
 }

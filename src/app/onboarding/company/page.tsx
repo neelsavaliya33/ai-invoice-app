@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Building2, CheckCircle2, Sparkles } from "lucide-react";
 import { BrandMark } from "@/components/brand-logo";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -9,21 +10,22 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge, Button, Card } from "@/components/ui";
 import { FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
 import { toast } from "@/components/toast";
-import { aiPlans, industries } from "@/lib/data";
+import { industries } from "@/lib/data";
 import { useAppDispatch } from "@/store/hooks";
-import { setActiveIndustry, setAiPlan } from "@/store/store";
+import { setActiveCompany, setActiveIndustry, setAiPlan } from "@/store/store";
 import { useI18n } from "@/lib/i18n";
+import { useTrialConfig } from "@/lib/use-plans";
+import { createUserCompany } from "@/lib/api";
 
 const industryOptions = industries.map(([name]) => name);
-const planOptions = aiPlans.map((plan) => ({
-  label: `${plan.name} - ${plan.aiCreditLimit} AI credits`,
-  value: plan.id,
-}));
 
 export default function CompanyOnboardingPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const dispatch = useAppDispatch();
   const { t } = useI18n();
+  const { trialConfig } = useTrialConfig();
+  const trialDaysLabel = trialConfig ? `${trialConfig.trialDays}-day` : "configured";
 
   return (
     <main className="min-h-screen bg-background">
@@ -53,8 +55,8 @@ export default function CompanyOnboardingPage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {[
               [Building2, "Company and GST profile"],
-              [Sparkles, "AI credits follow selected plan"],
-              [CheckCircle2, "Skip payment and continue free"],
+              [Sparkles, trialConfig ? `${trialConfig.aiCreditLimit} trial AI credits` : "Trial AI credits from backend"],
+              [CheckCircle2, `${trialDaysLabel} free trial starts by default`],
               [ArrowRight, "Open dashboard after setup"],
             ].map(([Icon, label]) => (
               <Card key={label as string} className="p-5">
@@ -67,57 +69,98 @@ export default function CompanyOnboardingPage() {
 
         <FormCard
           title="Company details"
-          description="Complete this after first login. You can stay on the free plan and upgrade later."
+          description={`Complete this after first login. Your ${trialDaysLabel} free trial is managed from global configuration.`}
           asForm
           className="mx-auto w-full max-w-4xl"
           successMessage="Company profile saved"
-          onValidSubmit={(values) => {
-            const selectedPlan = aiPlans.find((plan) => plan.id === values.plan) ?? aiPlans[0];
-            dispatch(setAiPlan({ plan: selectedPlan.id, limit: selectedPlan.aiCreditLimit, used: 0 }));
-            dispatch(setActiveIndustry(values.industry));
-            toast({
-              tone: "success",
-              title: "Company setup complete",
-              description: `${values["company-name"]} is using the ${selectedPlan.name} plan with ${selectedPlan.aiCreditLimit} AI credits.`,
-            });
-            window.setTimeout(() => router.push("/app"), 650);
+          showSuccessToast={false}
+          onValidSubmit={async (values) => {
+            try {
+              const company = await createUserCompany({
+                name: values["company-name"],
+                legal_name: values["legal-name"],
+                industry: values.industry,
+                gstin: values.gstin,
+                city: values.city,
+                state: values.state,
+                currency: "INR",
+                financial_year: "FY 2026-27",
+              });
+              if (trialConfig) {
+                dispatch(setAiPlan({ plan: "free-trial", limit: trialConfig.aiCreditLimit, used: 0 }));
+              }
+              dispatch(setActiveIndustry(values.industry));
+              dispatch(setActiveCompany(company.id));
+              queryClient.setQueryData(["user-companies"], (current: unknown) => {
+                const currentCompanies = Array.isArray(current) ? current : [];
+                return [
+                  company,
+                  ...currentCompanies.filter((item): item is typeof company => {
+                    return Boolean(
+                      item &&
+                        typeof item === "object" &&
+                        "id" in item &&
+                        (item as { id: string }).id !== company.id,
+                    );
+                  }),
+                ];
+              });
+              queryClient.invalidateQueries({ queryKey: ["user-companies"] });
+              toast({
+                tone: "success",
+                title: "Company setup complete",
+                description: `${company.name} is now available in your company dropdown.`,
+              });
+              window.setTimeout(() => router.push("/app"), 650);
+            } catch (error) {
+              toast({
+                tone: "error",
+                title: "Company setup failed",
+                description: error instanceof Error ? error.message : "Please try again.",
+              });
+            }
           }}
         >
           <div className="space-y-6">
             <FormGrid>
-              <TextField label="Company name" name="company-name" required minLength={3} defaultValue="Kavya Textiles" />
-              <TextField label="Legal name" name="legal-name" required minLength={3} defaultValue="Kavya Textiles Private Limited" />
-              <SelectField label="Industry" name="industry" required options={[...industryOptions]} defaultValue="Textile" />
-              <SelectField label="Business type" name="business-type" required options={["Proprietorship", "Partnership", "LLP", "Private Limited", "Public Limited"]} defaultValue="Private Limited" />
-              <TextField label="GSTIN" name="gstin" required pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]" defaultValue="24ABCDE1234F1Z5" />
-              <TextField label="City" name="city" required minLength={2} defaultValue="Ahmedabad" />
-              <TextField label="State" name="state" required minLength={2} defaultValue="Gujarat" />
-              <SelectField label="Plan" name="plan" required options={planOptions} defaultValue="free" />
+              <TextField label="Company name" name="company-name" required minLength={3} placeholder="Kavya Textiles" />
+              <TextField label="Legal name" name="legal-name" required minLength={3} placeholder="Kavya Textiles Private Limited" />
+              <SelectField label="Industry" name="industry" required options={[...industryOptions]} placeholder="Select industry" />
+              <SelectField label="Business type" name="business-type" required options={["Proprietorship", "Partnership", "LLP", "Private Limited", "Public Limited"]} placeholder="Select business type" />
+              <TextField
+                label="GSTIN"
+                name="gstin"
+                pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]"
+                placeholder="Optional GSTIN"
+                helper="Leave blank if your business is not registered for GST yet."
+              />
+              <TextField label="City" name="city" required minLength={2} placeholder="Ahmedabad" />
+              <TextField label="State" name="state" required minLength={2} placeholder="Gujarat" />
             </FormGrid>
 
             <div className="rounded-2xl border bg-background p-4">
-              <p className="font-bold">Plan and AI credit rule</p>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                {aiPlans.map((plan) => (
-                  <div key={plan.id} className="rounded-xl border bg-card p-3 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-bold">{plan.name}</span>
-                      <Badge tone={plan.id === "free" ? "green" : "blue"}>{plan.aiCreditLimit} credits</Badge>
-                    </div>
-                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{plan.description}</p>
-                  </div>
-                ))}
+              <p className="font-bold">Free trial starts automatically</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Company setup starts your {trialDaysLabel} workspace by default. No plan selection or payment is needed during first setup.
+              </p>
+              <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
+                <span className="rounded-xl border bg-card p-3 font-semibold">
+                  {trialConfig?.companyLimit ?? "Configured"} companies
+                </span>
+                <span className="rounded-xl border bg-card p-3 font-semibold">
+                  {trialConfig?.userLimit ?? "Configured"} users
+                </span>
+                <span className="rounded-xl border bg-card p-3 font-semibold">
+                  {trialConfig?.aiCreditLimit ?? "Configured"} AI credits
+                </span>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+            <div className="flex justify-end">
               <Button type="submit">
                 Save company and continue
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Link href="/app" className="text-sm font-semibold text-primary hover:underline">
-                Skip for now and open demo dashboard
-              </Link>
             </div>
           </div>
         </FormCard>

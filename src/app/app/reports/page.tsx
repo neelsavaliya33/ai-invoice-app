@@ -17,13 +17,14 @@ import {
 } from "lucide-react";
 import { AiActionCard } from "@/components/workflow";
 import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
-import { DatePickerField, FilterBar } from "@/components/form-kit";
+import { DatePickerField, FilterBar, FormModal } from "@/components/form-kit";
 import { LookupSelectField } from "@/components/lookup-select-field";
 import { customers, expenses, inventory, invoices, purchases } from "@/lib/data";
 import { currency } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "@/components/toast";
 import { cn } from "@/lib/utils";
+import { ReportConfigForm } from "@/components/workflow-actions";
 
 type ReportTone = "teal" | "green" | "amber" | "violet";
 type ReportDefinition = {
@@ -52,7 +53,9 @@ const reportGroups: ReportGroup[] = [
     title: "Sales and purchase",
     reports: [
       { title: "Sale Detail", description: "Invoice-wise sales, tax, item, and customer detail.", tone: "teal", icon: ReceiptIndianRupee },
+      { title: "Sale Summary", description: "Daily, monthly, customer, and taxable sales totals.", tone: "green", icon: TrendingUp },
       { title: "Purchase Detail", description: "Supplier bills, input GST, and payable tracking.", tone: "amber", icon: ClipboardList },
+      { title: "Purchase Summary", description: "Supplier, category, tax, and period-wise purchase totals.", tone: "amber", icon: ClipboardList },
       { title: "Item By Contact", description: "Items sold or purchased by each contact.", tone: "violet", icon: Users },
     ],
   },
@@ -63,6 +66,12 @@ const reportGroups: ReportGroup[] = [
       { title: "Stock", description: "Current stock quantity, value, low-stock, and slow movers.", tone: "teal", icon: Boxes },
       { title: "Contact Payable", description: "Supplier-wise payable aging and due amount.", tone: "green", icon: Landmark },
       { title: "Contact Receivables", description: "Customer-wise receivable aging and overdue risk.", tone: "teal", icon: Users },
+      { title: "Purchase by Item", description: "Item-wise purchase quantity, value, and tax.", tone: "green", icon: Boxes },
+      { title: "Purchase by Contact", description: "Supplier-wise purchase movement and payable effect.", tone: "violet", icon: Users },
+      { title: "Purchase by Category", description: "Category-wise purchase mix and input GST view.", tone: "amber", icon: Boxes },
+      { title: "Sale by Item", description: "Item-wise sale quantity, margin, and tax.", tone: "teal", icon: Boxes },
+      { title: "Sale by Contact", description: "Customer-wise sales and collection status.", tone: "violet", icon: Users },
+      { title: "Sale by Category", description: "Category-wise sale mix and revenue trends.", tone: "green", icon: Boxes },
     ],
   },
   {
@@ -94,6 +103,7 @@ function reportToneClass(tone: ReportTone, active: boolean) {
 export default function ReportsPage() {
   const { t } = useI18n();
   const [activeReport, setActiveReport] = useState("Profit Loss");
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const selectedReport = allReports.find((report) => report.title === activeReport) ?? allReports[0];
   const Icon = selectedReport.icon;
 
@@ -114,17 +124,9 @@ export default function ReportsPage() {
         title={t("reports")}
         subtitle="Wide array of reports to manage every aspect of your business, from balance sheet and profit loss to sales summaries, inventory details, GST reports, and contact aging."
         action={
-          <Button
-            onClick={() =>
-              toast({
-                tone: "success",
-                title: `${activeReport} export prepared`,
-                description: "PDF and Excel export is ready in this local demo.",
-              })
-            }
-          >
+          <Button onClick={() => setIsConfigOpen(true)}>
             <Download className="h-4 w-4" />
-            Export report
+            Configure report
           </Button>
         }
       />
@@ -233,16 +235,19 @@ export default function ReportsPage() {
             <DataTable
               headers={["Metric", "Current value", "Source", "Action"]}
               rows={[
-                ["Receivables", currency(summary.receivables), `${customers.length} contacts`, "Follow up overdue customers"],
-                ["Payables", currency(summary.payables), `${purchases.length} purchase bills`, "Plan supplier payments"],
-                ["Stock value", currency(summary.stockValue), `${inventory.length} SKUs`, "Review low stock and reorder"],
-                ["Expense booked", currency(summary.expenseTotal), `${expenses.length} expense entries`, "Audit category and GST"],
+                ["Receivables", currency(summary.receivables), `${customers.length} contacts`, <Button key="a" variant="ghost" onClick={() => setIsConfigOpen(true)}>Configure follow-up</Button>],
+                ["Payables", currency(summary.payables), `${purchases.length} purchase bills`, <Button key="b" variant="ghost" onClick={() => setIsConfigOpen(true)}>Plan payments</Button>],
+                ["Stock value", currency(summary.stockValue), `${inventory.length} SKUs`, <Button key="c" variant="ghost" onClick={() => setIsConfigOpen(true)}>Review stock</Button>],
+                ["Expense booked", currency(summary.expenseTotal), `${expenses.length} expense entries`, <Button key="d" variant="ghost" onClick={() => setIsConfigOpen(true)}>Audit GST</Button>],
               ]}
             />
           </div>
         </Card>
         <AiActionCard />
       </div>
+      <FormModal open={isConfigOpen} onOpenChange={setIsConfigOpen} title={`${activeReport} configuration`}>
+        <ReportConfigForm reportName={activeReport} onClose={() => setIsConfigOpen(false)} />
+      </FormModal>
     </div>
   );
 }

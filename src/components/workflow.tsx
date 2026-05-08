@@ -1,7 +1,8 @@
 import { Badge, Button, Card, DataTable, Input, Select, SectionTitle } from "@/components/ui";
-import { DatePickerField, FormActions, FormCard, FormGrid, SelectField, TextareaField, TextField } from "@/components/form-kit";
+import { DatePickerField, FormActions, FormCard, FormGrid, FormSubmitRow, SelectField, TextareaField, TextField } from "@/components/form-kit";
 import { LookupSelectField } from "@/components/lookup-select-field";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/dropdown-menu";
+import { WorkflowActionMenu } from "@/components/workflow-actions";
 import { useI18n } from "@/lib/i18n";
 import { currency } from "@/lib/utils";
 import { customers, inventory, invoices, reports, users } from "@/lib/data";
@@ -59,20 +60,45 @@ export function KpiGrid() {
 
 export function InvoiceRows({ query = "", status = "All" }: { query?: string; status?: string }) {
   const filtered = invoices.filter((invoice) => {
-    const matchesQuery = `${invoice.id} ${invoice.customer}`.toLowerCase().includes(query.toLowerCase());
+    const matchesQuery = `${invoice.id} ${invoice.customer} ${invoice.owner} ${invoice.channel}`.toLowerCase().includes(query.toLowerCase());
     const matchesStatus = status === "All" || invoice.status === status;
     return matchesQuery && matchesStatus;
   });
   return (
     <DataTable
-      headers={["Invoice", "Customer", "Status", "Due date", "Amount", "Actions"]}
+      headers={["Invoice", "Customer", "Workflow", "Taxable / GST", "Payment", "Due", "Owner", "Actions"]}
       rows={(filtered.length ? filtered : []).map((invoice) => [
-        <span key="id" className="font-semibold">{invoice.id}</span>,
-        invoice.customer,
-        <Badge key="status" tone={invoice.status === "Overdue" ? "red" : invoice.status === "Paid" ? "green" : invoice.status === "Draft" ? "amber" : "blue"}>{invoice.status}</Badge>,
-        invoice.dueDate,
-        currency(invoice.amount),
-        <RowOptions key="action" type="Invoice" />,
+        <div key="id">
+          <p className="font-semibold">{invoice.id}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{invoice.issueDate}</p>
+        </div>,
+        <div key="customer">
+          <p className="font-semibold">{invoice.customer}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{invoice.channel}</p>
+        </div>,
+        <div key="workflow" className="space-y-1">
+          <Badge tone={invoice.status === "Overdue" ? "red" : invoice.status === "Paid" ? "green" : invoice.status === "Draft" ? "amber" : "blue"}>{invoice.status}</Badge>
+          <p className="text-xs text-muted-foreground">E-way: {invoice.ewayStatus}</p>
+        </div>,
+        <div key="tax">
+          <p className="font-semibold">{currency(invoice.taxable)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">GST {currency(invoice.gst)}</p>
+        </div>,
+        <div key="payment">
+          <p className="font-semibold">{currency(invoice.amount)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{invoice.payment} · paid {currency(invoice.paid)}</p>
+        </div>,
+        <div key="due">
+          <p className="font-semibold">{invoice.dueDate}</p>
+          <p className="mt-1 max-w-40 text-xs text-muted-foreground">{invoice.nextAction}</p>
+        </div>,
+        invoice.owner,
+        <WorkflowActionMenu
+          key="action"
+          label="Invoice"
+          recordLabel={invoice.id}
+          actions={["Send reminder", "Receive payment", "Duplicate", "Download PDF", "Create e-way bill", "Cancel invoice", "Archive"]}
+        />,
       ])}
     />
   );
@@ -96,7 +122,12 @@ export function CustomerRows({ query = "", type = "All types", balance = "Any ba
         customer.contact,
         currency(customer.balance),
         <Badge key="status" tone={customer.status === "Overdue" ? "red" : customer.status === "Paid" ? "green" : "blue"}>{customer.status}</Badge>,
-        <RowOptions key="options" type="Customer" />,
+        <WorkflowActionMenu
+          key="options"
+          label="Customer"
+          recordLabel={customer.name}
+          actions={["Opening balance", "Statement export", "Payment reminder", "Contact ledger", "Item by contact", "Credit limit update", "Archive"]}
+        />,
       ])}
     />
   );
@@ -121,7 +152,12 @@ export function InventoryRows({ query = "", category = "All categories", status 
         `${item.reorder} ${item.unit}`,
         currency(item.stock * item.purchase),
         <Badge key="status" tone={item.status === "Low stock" || item.status === "Reorder" ? "amber" : "green"}>{item.status}</Badge>,
-        <RowOptions key="options" type="Item" />,
+        <WorkflowActionMenu
+          key="options"
+          label="Inventory item"
+          recordLabel={item.sku}
+          actions={["Stock adjustment", "Stock transfer", "Reorder purchase", "Serial import", "Price update", "Low-stock action", "Archive"]}
+        />,
       ])}
     />
   );
@@ -138,7 +174,12 @@ export function UserRows() {
         <Badge key="status" tone={user.status === "Active" ? "green" : "amber"}>{user.status}</Badge>,
         user.active,
         user.scope,
-        <RowOptions key="options" type="User" />,
+        <WorkflowActionMenu
+          key="options"
+          label="User"
+          recordLabel={user.name}
+          actions={["Resend invite", "Deactivate user", "Transfer ownership", "Access audit"]}
+        />,
       ])}
     />
   );
@@ -174,65 +215,67 @@ export function InvoiceForm() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
       <div className="space-y-6">
-        <FormCard title="AI Invoice Draft" description="Turn plain English into editable invoice fields." asForm>
+        <FormCard title="AI Invoice Draft" description="Convert a real sales instruction into editable GST invoice fields, line items, tax, due date, and dispatch notes." asForm>
           <div className="mb-4 flex items-center gap-2">
             <WandSparkles className="h-5 w-5 text-accent" />
             <h2 className="font-bold">Prompt builder</h2>
           </div>
-          <TextareaField label="Invoice prompt" required minLength={20} placeholder="Describe the invoice you want to create..." defaultValue="Create invoice for Kavya Textiles for 20 cotton rolls and 12 blue denim bundles with 18% GST." />
+          <TextareaField label="Invoice prompt" required minLength={20} placeholder="Create tax invoice for Kavya Textiles, Surat. Add 20 cotton roll A-12 at INR 1,850 and 12 blue denim bundles at INR 2,450, apply 18% GST, Net 7 payment terms, dispatch by Surat Transport Co. to Ahmedabad." />
           <div className="mt-3 flex flex-wrap gap-2">
             {["Textile invoice", "Mobile sale", "Service retainer", "Rental bill"].map((chip) => <Badge key={chip}>{chip}</Badge>)}
           </div>
-          <Button type="submit" className="mt-4">Generate Draft</Button>
+          <FormSubmitRow className="mt-4">
+            <Button type="submit">Generate Draft</Button>
+          </FormSubmitRow>
         </FormCard>
 
-        <FormCard title="Customer Details" description="Reusable customer identity, GST, contact, address, and credit fields." asForm>
+        <FormCard title="Customer Details" description="Customer, GSTIN, shipping location, credit exposure, and payment terms used across invoice, e-way bill, and ledger workflows." asForm>
           <FormGrid>
-            <SelectField label="Customer" required defaultValue="Kavya Textiles" options={["Kavya Textiles", "Mehta Traders"]} />
-            <TextField label="GSTIN" required pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]" helper="15-character GSTIN format" defaultValue="24ABCDE1234F1Z5" />
-            <LookupSelectField label="Customer type" group="customer-types" required defaultValue="Textile" />
-            <TextField label="Contact person" required minLength={3} defaultValue="Rohan Shah" />
-            <TextField label="Phone number" required type="tel" pattern="^\\+91\\s?[0-9\\s]{10,14}$" helper="Use Indian mobile format, e.g. +91 98765 43210" defaultValue="+91 98765 43210" />
-            <TextField label="Email" required type="email" defaultValue="accounts@kavyatextiles.in" />
-            <TextField label="Billing address" required minLength={8} defaultValue="Ring Road Textile Market" />
-            <TextField label="City / State" required minLength={4} defaultValue="Surat, Gujarat" />
-            <TextField label="Credit limit" required pattern="^INR\\s?[0-9,]+$" helper="Format: INR 2,00,000" defaultValue="INR 2,00,000" />
-            <LookupSelectField label="Payment terms" group="payment-terms" required defaultValue="Net 7" />
+            <SelectField label="Customer" required options={["Kavya Textiles", "Mehta Traders"]} placeholder="Select customer" />
+            <TextField label="GSTIN" pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]" helper="Optional 15-character GSTIN format" placeholder="24ABCDE1234F1Z5" />
+            <LookupSelectField label="Customer type" group="customer-types" required placeholder="Select customer type" />
+            <TextField label="Contact person" required minLength={3} placeholder="Rohan Shah" />
+            <TextField label="Phone number" required type="tel" pattern="^\\+91\\s?[0-9\\s]{10,14}$" helper="Use Indian mobile format, e.g. +91 98765 43210" placeholder="+91 98765 43210" />
+            <TextField label="Email" required type="email" placeholder="accounts@kavyatextiles.in" />
+            <TextField label="Billing address" required minLength={8} placeholder="Shop 214, Ring Road Textile Market, Surat" />
+            <TextField label="Ship to" required minLength={8} placeholder="Kavya Textiles Warehouse, Narol, Ahmedabad" />
+            <TextField label="Credit limit" required pattern="^INR\\s?[0-9,]+$" helper="Format: INR 2,00,000" placeholder="INR 2,00,000" />
+            <LookupSelectField label="Payment terms" group="payment-terms" required placeholder="Select payment terms" />
           </FormGrid>
         </FormCard>
 
-        <FormCard title="Invoice Details" description="Operational fields for tax, transport, references, and due dates." asForm>
+        <FormCard title="Invoice Details" description="Document number, GST place of supply, responsible user, purchase reference, and dispatch details for real billing operations." asForm>
           <FormGrid columns={3}>
-            <TextField label="Invoice number" required pattern="INV-[0-9]{4,}" helper="Format: INV-1053" defaultValue="INV-1053" />
-            <DatePickerField label="Invoice date" required defaultValue="2026-05-04" />
-            <DatePickerField label="Due date" required defaultValue="2026-05-11" />
-            <LookupSelectField label="Place of supply" group="indian-states" required defaultValue="Gujarat" />
-            <LookupSelectField label="Tax type" group="tax-types" required defaultValue="GST" />
-            <TextField label="Salesperson" required minLength={3} defaultValue="Priya Patel" />
-            <TextField label="PO number" pattern="[A-Za-z0-9\\-/]{3,}" placeholder="Optional" />
-            <TextField label="E-way bill" pattern="[0-9]{12}" helper="12 digits when provided" placeholder="Optional" />
-            <TextField label="Vehicle number" pattern="[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}" helper="Example: GJ05AB1234" placeholder="Optional" />
+            <TextField label="Invoice number" required pattern="INV-[0-9]{4,}" helper="Format: INV-1053" placeholder="INV-1053" />
+            <DatePickerField label="Invoice date" required />
+            <DatePickerField label="Due date" required />
+            <LookupSelectField label="Place of supply" group="indian-states" required placeholder="Select state" />
+            <LookupSelectField label="Tax type" group="tax-types" required placeholder="Select tax type" />
+            <TextField label="Sales owner" required minLength={3} placeholder="Priya Patel" />
+            <TextField label="PO number" pattern="[A-Za-z0-9\\-/]{3,}" placeholder="PO-KT-0426-18" />
+            <TextField label="Transporter" required minLength={3} placeholder="Surat Transport Co." />
+            <TextField label="Vehicle number" pattern="[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}" helper="Example: GJ05AB1234" placeholder="GJ05AB1234" />
           </FormGrid>
         </FormCard>
 
-        <FormCard title="Line Items" description="Reusable editable table container for product, service, and category fields." action={<Button variant="secondary"><Plus className="h-4 w-4" /> Add item</Button>}>
+        <FormCard title="Line Items" description="Stock-aware invoice rows with HSN, quantity, rate, discount, GST split, and margin-ready totals." action={<Button variant="secondary"><Plus className="h-4 w-4" /> Add item</Button>}>
           <DataTable
-            headers={["Item", "HSN", "Qty", "Rate", "GST", "Total"]}
+            headers={["Item", "HSN", "Qty", "Rate", "GST", "Stock after", "Total"]}
             rows={[
-              ["Cotton roll A-12", "5208", "20 Roll", "INR 1,850", "18%", "INR 43,660"],
-              ["Denim bundle blue", "6203", "12 Bundle", "INR 2,450", "18%", "INR 34,692"],
+              ["Cotton roll A-12", "5208", "20 Roll", "INR 1,850", "18%", "8 Roll", "INR 43,660"],
+              ["Denim bundle blue", "6203", "12 Bundle", "INR 2,450", "18%", "64 Bundle", "INR 34,692"],
             ]}
           />
         </FormCard>
 
-        <FormCard title="Payment, Notes & Terms" description="Shared payment method, reminder, terms, and note fields." asForm>
+        <FormCard title="Payment, Notes & Terms" description="Collection method, advance, reminder date, customer note, and terms that appear on PDF and follow-up tasks." asForm>
           <FormGrid>
             <LookupSelectField label="Payment method" group="payment-methods" required />
-            <TextField label="UPI ID" required pattern="[a-zA-Z0-9.\\-_]{2,}@[a-zA-Z]{2,}" helper="Format: name@bank" defaultValue="koshpilot@upi" />
-            <TextField label="Advance received" required pattern="^INR\\s?[0-9,]+$" defaultValue="INR 0" />
-            <DatePickerField label="Reminder date" required defaultValue="2026-05-10" />
-            <TextareaField label="Customer note" required minLength={8} defaultValue="Thank you for your business." />
-            <TextareaField label="Terms" required minLength={15} defaultValue="Payment due within 7 days. Goods once sold will not be returned." />
+            <TextField label="UPI ID" required pattern="[a-zA-Z0-9.\\-_]{2,}@[a-zA-Z]{2,}" helper="Format: name@bank" placeholder="koshpilot@upi" />
+            <TextField label="Advance received" required pattern="^INR\\s?[0-9,]+$" placeholder="INR 0" />
+            <DatePickerField label="Reminder date" required />
+            <TextareaField label="Customer note" required minLength={8} placeholder="Material packed in 32 bundles. Please verify quantity and shade before unloading." fieldClassName="md:col-span-2" />
+            <TextareaField label="Terms" required minLength={15} placeholder="Payment due within 7 days. Late payment may pause further dispatch. Transport damage must be reported within 24 hours of delivery." fieldClassName="md:col-span-2" />
           </FormGrid>
           <FormActions primary="Save invoice details" secondary="Reset" />
         </FormCard>
@@ -244,21 +287,24 @@ export function InvoiceForm() {
           <div className="mt-6 space-y-4 rounded-2xl bg-background p-5">
             <div className="flex justify-between">
               <div>
-                <p className="font-bold">KoshPilot Demo Co.</p>
-                <p className="text-sm text-muted-foreground">GSTIN 24ABCDE1234F1Z5</p>
+                <p className="font-bold">Kavya Textiles Private Limited</p>
+                <p className="text-sm text-muted-foreground">GSTIN 24ABCDE1234F1Z5 · Surat</p>
               </div>
               <Badge tone="amber">Draft</Badge>
             </div>
             <div className="border-t pt-4">
-              <p className="font-semibold">Kavya Textiles</p>
-              <p className="text-sm text-muted-foreground">Due 11 May 2026</p>
+              <p className="font-semibold">Kavya Textiles Warehouse</p>
+              <p className="text-sm text-muted-foreground">Due 11 May 2026 · Net 7 · PO-KT-0426-18</p>
             </div>
             <div className="space-y-2 border-t pt-4 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><span>INR 66,400</span></div>
               <div className="flex justify-between"><span>GST</span><span>INR 11,952</span></div>
               <div className="flex justify-between text-lg font-bold"><span>Total</span><span>INR 78,352</span></div>
             </div>
-            <div className="grid h-28 place-items-center rounded-2xl border border-dashed text-sm text-muted-foreground">Payment QR</div>
+            <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+              <p className="font-semibold text-foreground">Dispatch note</p>
+              <p className="mt-2">Surat Transport Co. · GJ05AB1234 · delivery to Narol, Ahmedabad</p>
+            </div>
           </div>
           <div className="mt-5 grid gap-3">
             <Button onClick={() => toast({ tone: "success", title: "Invoice sent", description: "Demo invoice was saved and queued for sending." })}><Send className="h-4 w-4" /> Save and send</Button>

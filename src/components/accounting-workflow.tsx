@@ -1,12 +1,14 @@
 "use client";
 
 import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
-import { CloseFormButton, DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
+import { CloseFormButton, DatePickerField, FilterBar, FormCard, FormGrid, FormSubmitRow, SelectField, TextField, TextareaField } from "@/components/form-kit";
 import { LookupSelectField } from "@/components/lookup-select-field";
+import { WorkflowActionMenu } from "@/components/workflow-actions";
 import { currency } from "@/lib/utils";
 import { bankTransactions, expenses, gstSummary, ledgerEntries, payments, purchases } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { ArrowUpRight, Plus } from "lucide-react";
+import { toast } from "@/components/toast";
 
 export function AccountingHeader({
   titleKey,
@@ -48,13 +50,14 @@ export function LedgerTable({ status = "All statuses" }: { status?: string }) {
   const rows = ledgerEntries.filter(() => status === "All statuses" || status === "Matched");
   return (
     <DataTable
-      headers={[t("date"), t("account"), t("debit"), t("credit"), t("reference")]}
+      headers={[t("date"), t("account"), t("debit"), t("credit"), t("reference"), "Actions"]}
       rows={rows.map((entry) => [
         entry.date,
         <span key="account" className="font-semibold">{entry.account}</span>,
         entry.debit ? currency(entry.debit) : "-",
         entry.credit ? currency(entry.credit) : "-",
         entry.ref,
+        <WorkflowActionMenu key="actions" label="Ledger" recordLabel={entry.ref} actions={["Ledger adjustment", "Contra entry", "Opening balance", "Export ledger"]} />,
       ])}
     />
   );
@@ -65,7 +68,7 @@ export function ExpenseTable({ status = "All statuses" }: { status?: string }) {
   const rows = expenses.filter((expense) => status === "All statuses" || expense.status === status);
   return (
     <DataTable
-      headers={[t("expense"), t("vendor"), t("category"), t("date"), t("amount"), t("status")]}
+      headers={[t("expense"), t("vendor"), t("category"), t("date"), t("amount"), t("status"), "Actions"]}
       rows={rows.map((expense) => [
         <span key="id" className="font-semibold">{expense.id}</span>,
         expense.vendor,
@@ -73,6 +76,7 @@ export function ExpenseTable({ status = "All statuses" }: { status?: string }) {
         expense.date,
         currency(expense.amount),
         <Badge key="status" tone={expense.status === "Pending" ? "amber" : expense.status === "Paid" ? "green" : "blue"}>{expense.status}</Badge>,
+        <WorkflowActionMenu key="actions" label="Expense" recordLabel={expense.id} actions={["Approve expense", "Reject expense", "Recurring expense", "Reimbursement", "Mark paid"]} />,
       ])}
     />
   );
@@ -83,7 +87,7 @@ export function PurchaseTable({ status = "All statuses" }: { status?: string }) 
   const rows = purchases.filter((purchase) => status === "All statuses" || purchase.status === status);
   return (
     <DataTable
-      headers={["PO", t("supplier"), t("status"), t("date"), t("amount"), t("payable")]}
+      headers={["PO", t("supplier"), t("status"), t("date"), t("amount"), t("payable"), "Actions"]}
       rows={rows.map((purchase) => [
         <span key="id" className="font-semibold">{purchase.id}</span>,
         purchase.supplier,
@@ -91,6 +95,7 @@ export function PurchaseTable({ status = "All statuses" }: { status?: string }) 
         purchase.date,
         currency(purchase.amount),
         currency(purchase.payable),
+        <WorkflowActionMenu key="actions" label="Purchase" recordLabel={purchase.id} actions={["Purchase order", "Goods receipt", "Supplier return", "Input GST review", "Supplier payment"]} />,
       ])}
     />
   );
@@ -101,7 +106,7 @@ export function PaymentTable({ status = "All statuses" }: { status?: string }) {
   const rows = payments.filter((payment) => status === "All statuses" || payment.status === status);
   return (
     <DataTable
-      headers={[t("payment"), t("party"), t("type"), t("mode"), t("date"), t("amount"), t("status")]}
+      headers={[t("payment"), t("party"), t("type"), t("mode"), t("date"), t("amount"), t("status"), "Actions"]}
       rows={rows.map((payment) => [
         <span key="id" className="font-semibold">{payment.id}</span>,
         payment.party,
@@ -110,6 +115,7 @@ export function PaymentTable({ status = "All statuses" }: { status?: string }) {
         payment.date,
         currency(payment.amount),
         <Badge key="status" tone={payment.status === "Matched" ? "green" : "red"}>{payment.status}</Badge>,
+        <WorkflowActionMenu key="actions" label="Payment" recordLabel={payment.id} actions={["Match invoice", "Split settlement", "Advance entry", "Refund", "Reconcile"]} />,
       ])}
     />
   );
@@ -120,7 +126,7 @@ export function BankTable({ status = "All statuses" }: { status?: string }) {
   const rows = bankTransactions.filter((txn) => status === "All statuses" || txn.status === status);
   return (
     <DataTable
-      headers={[t("txn"), t("date"), t("narration"), t("type"), t("amount"), t("status")]}
+      headers={[t("txn"), t("date"), t("narration"), t("type"), t("amount"), t("status"), "Actions"]}
       rows={rows.map((txn) => [
         <span key="id" className="font-semibold">{txn.id}</span>,
         txn.date,
@@ -128,6 +134,7 @@ export function BankTable({ status = "All statuses" }: { status?: string }) {
         <Badge key="type" tone={txn.type === "Credit" ? "green" : "amber"}>{txn.type}</Badge>,
         currency(txn.amount),
         <Badge key="status" tone={txn.status === "Reconciled" ? "green" : "red"}>{txn.status}</Badge>,
+        <WorkflowActionMenu key="actions" label="Bank transaction" recordLabel={txn.id} actions={["Reconcile", "Create rule", "Mark reviewed", "Export ledger"]} />,
       ])}
     />
   );
@@ -170,7 +177,7 @@ export function ExpenseForm({ onClose }: { onClose?: () => void }) {
       asForm
     >
       <FormGrid>
-        <TextField label={t("expenseNumber")} required defaultValue="EXP-2105" pattern="EXP-[0-9]{4,}" />
+        <TextField label={t("expenseNumber")} required placeholder="EXP-2105" pattern="EXP-[0-9]{4,}" />
         <TextField label={t("vendor")} required minLength={3} placeholder="Vendor name" />
         <LookupSelectField label={t("category")} group="expense-categories" required />
         <DatePickerField label={t("expenseDate")} required />
@@ -178,9 +185,11 @@ export function ExpenseForm({ onClose }: { onClose?: () => void }) {
         <LookupSelectField label={t("gstRate")} group="gst-rates" required />
         <LookupSelectField label={t("paymentStatus")} group="payment-statuses" required />
         <TextField label={t("reference")} placeholder="Bill or receipt number" />
-        <TextareaField label={t("notes")} minLength={8} placeholder="Approval or accounting notes" />
+        <TextareaField label={t("notes")} minLength={8} placeholder="Approval or accounting notes" fieldClassName="md:col-span-2" />
       </FormGrid>
-      <Button type="submit" className="mt-5">{t("saveExpense")}</Button>
+      <FormSubmitRow>
+        <Button type="submit">{t("saveExpense")}</Button>
+      </FormSubmitRow>
     </FormCard>
   );
 }
@@ -191,7 +200,12 @@ export function AccountingAiCard({ text }: { text: string }) {
     <Card className="p-5">
       <h3 className="font-bold">{t("aiAccountingInsight")}</h3>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">{text}</p>
-      <Button className="mt-5 w-full">{t("createAction")}</Button>
+      <Button
+        className="mt-5 w-full"
+        onClick={() => toast({ tone: "success", title: "Follow-up created", description: "The recommended accounting action was added to today's demo task list." })}
+      >
+        {t("createAction")}
+      </Button>
       <div className="mt-4 flex items-center justify-between rounded-2xl bg-muted p-3 text-sm">
         <span>{t("reviewAuditTrail")}</span>
         <ArrowUpRight className="h-4 w-4" />

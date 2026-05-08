@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Calculator, Divide, IndianRupee, Minus, Percent, Plus, X } from "lucide-react";
-import { Button, Badge } from "@/components/ui";
-import { currency } from "@/lib/utils";
+import { Calculator, Divide, Minus, Percent, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,20 +74,6 @@ export function GstCalculator() {
   const [mode, setMode] = useState<GstMode>("add");
 
   const numericAmount = Number(display || 0);
-
-  const result = useMemo(() => {
-    const safeAmount = Number.isFinite(numericAmount) ? numericAmount : 0;
-    if (mode === "add") {
-      const gst = roundMoney((safeAmount * rate) / 100);
-      const total = roundMoney(safeAmount + gst);
-      return { taxable: safeAmount, gst, total };
-    }
-    const taxable = rate ? roundMoney(safeAmount / (1 + rate / 100)) : safeAmount;
-    const gst = roundMoney(safeAmount - taxable);
-    return { taxable, gst, total: safeAmount };
-  }, [mode, numericAmount, rate]);
-
-  const halfGst = roundMoney(result.gst / 2);
 
   useEffect(() => {
     function onGlobalKeyDown(event: KeyboardEvent) {
@@ -396,42 +381,6 @@ export function GstCalculator() {
             <GstKey className="col-span-4 bg-primary text-primary-foreground hover:bg-primary/90" onClick={equals}>
               =
             </GstKey>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-3 rounded-2xl border bg-background p-4 text-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 font-bold">
-              <IndianRupee className="h-4 w-4 text-primary" />
-              GST working
-            </div>
-            <Badge tone={mode === "add" ? "green" : "blue"}>
-              {mode === "add" ? "Added" : "Removed"} {rate}%
-            </Badge>
-          </div>
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-muted-foreground">Taxable amount</span>
-              <span className="font-bold">{currency(result.taxable)}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-muted-foreground">GST amount</span>
-              <span className="font-bold text-primary">{currency(result.gst)}</span>
-            </div>
-            <div className="grid gap-2 rounded-xl bg-muted p-3">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">CGST</span>
-                <span className="font-semibold">{currency(halfGst)}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">SGST</span>
-                <span className="font-semibold">{currency(halfGst)}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-4 border-t pt-3">
-              <span className="font-bold">Final total</span>
-              <span className="text-xl font-black">{currency(result.total)}</span>
-            </div>
           </div>
         </div>
       </DropdownMenuContent>

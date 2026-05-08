@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { EmployeeForm, EmployeeTable, HrAiCard, HrFilters, HrHeader, HrKpis } from "@/components/hr-workflow";
-import { SlideFormPanel } from "@/components/form-kit";
+import { FormModal } from "@/components/form-kit";
 
 export default function EmployeesPage() {
   const [query, setQuery] = useState("");
@@ -18,9 +18,9 @@ export default function EmployeesPage() {
         <EmployeeTable query={query} department={department} status={status} />
         <HrAiCard />
       </div>
-      <SlideFormPanel open={isFormOpen}>
+      <FormModal open={isFormOpen} onOpenChange={setIsFormOpen} title="Employee profile">
         <EmployeeForm onClose={() => setIsFormOpen(false)} />
-      </SlideFormPanel>
+      </FormModal>
     </div>
   );
 }

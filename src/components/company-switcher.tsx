@@ -1,11 +1,14 @@
 "use client";
 
 import { Building2, Check, ChevronsUpDown, MapPin, Plus, Settings } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { companies } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setActiveCompany } from "@/store/store";
 import { toast } from "./toast";
+import { fetchUserCompanies, getAccessToken, getRefreshToken, type CompanyResource } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +20,22 @@ import {
 
 export function useActiveCompany() {
   const activeCompanyId = useAppSelector((state) => state.ui.activeCompanyId);
-  return companies.find((company) => company.id === activeCompanyId) ?? companies[0];
+  const { data } = useRegisteredCompanies();
+  return data.find((company) => company.id === activeCompanyId) ?? data[0] ?? companies[0];
+}
+
+export function useRegisteredCompanies() {
+  const hasAuthTokens = typeof window !== "undefined" && Boolean(getAccessToken() || getRefreshToken());
+  const query = useQuery({
+    queryKey: ["user-companies"],
+    queryFn: fetchUserCompanies,
+    enabled: hasAuthTokens,
+    staleTime: 5 * 60 * 1000,
+  });
+  const apiCompanies = Array.isArray(query.data) ? query.data : [];
+  const isUsingFallback = !hasAuthTokens || query.isError;
+  const data: CompanyResource[] = isUsingFallback ? [...companies] : apiCompanies;
+  return { ...query, data, hasAuthTokens, isUsingFallback };
 }
 
 export function CompanyAvatar({ initials, className }: { initials: string; className?: string }) {
@@ -35,10 +53,12 @@ export function CompanyAvatar({ initials, className }: { initials: string; class
 
 export function CompanySwitcher({ compact = false }: { compact?: boolean }) {
   const activeCompany = useActiveCompany();
+  const { data: registeredCompanies, isError, isLoading, isUsingFallback } = useRegisteredCompanies();
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   function changeCompany(companyId: string) {
-    const nextCompany = companies.find((company) => company.id === companyId);
+    const nextCompany = registeredCompanies.find((company) => company.id === companyId);
     if (!nextCompany || nextCompany.id === activeCompany.id) return;
 
     dispatch(setActiveCompany(nextCompany.id));
@@ -76,10 +96,28 @@ export function CompanySwitcher({ compact = false }: { compact?: boolean }) {
           <span className="mt-1 block text-sm font-normal text-slate-700 dark:text-slate-300">
             One login can manage multiple GST registrations and books.
           </span>
+          {isError && isUsingFallback ? (
+            <span className="mt-1 block text-xs font-normal text-amber-700 dark:text-amber-300">
+              Could not load backend companies, showing saved demo workspaces.
+            </span>
+          ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="grid gap-1">
-          {companies.map((company) => (
+          {!isUsingFallback && isLoading ? (
+            <div className="rounded-2xl border bg-muted/40 p-4 text-sm text-muted-foreground">
+              Loading your companies...
+            </div>
+          ) : null}
+          {!isUsingFallback && !isLoading && !registeredCompanies.length ? (
+            <div className="rounded-2xl border bg-muted/40 p-4">
+              <p className="text-sm font-bold text-foreground">No company registered yet</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Add your first company to create invoices, inventory, reports, and GST records in this workspace.
+              </p>
+            </div>
+          ) : null}
+          {registeredCompanies.map((company) => (
             <DropdownMenuItem
               key={company.id}
               onSelect={() => changeCompany(company.id)}
@@ -107,11 +145,11 @@ export function CompanySwitcher({ compact = false }: { compact?: boolean }) {
           ))}
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="rounded-2xl">
+        <DropdownMenuItem className="rounded-2xl" onSelect={() => router.push("/onboarding/company")}>
           <Plus className="h-4 w-4" />
-          Add another company
+          {registeredCompanies.length ? "Add another company" : "Add first company"}
         </DropdownMenuItem>
-        <DropdownMenuItem className="rounded-2xl">
+        <DropdownMenuItem className="rounded-2xl" onSelect={() => router.push("/app/users")}>
           <Settings className="h-4 w-4" />
           Manage company access
         </DropdownMenuItem>

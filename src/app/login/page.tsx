@@ -2,17 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Bot, CheckCircle2, LockKeyhole, ShieldCheck } from "lucide-react";
+import { Bot, CheckCircle2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { Badge, Button, Card } from "@/components/ui";
 import { CheckboxCard, FormCard, FormGrid, TextField } from "@/components/form-kit";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useI18n } from "@/lib/i18n";
 import { BrandMark } from "@/components/brand-logo";
+import { loginAuthUser } from "@/lib/api";
+import { toast } from "@/components/toast";
+import { useState } from "react";
+import { useAppDispatch } from "@/store/hooks";
+import { setAuthUser } from "@/store/store";
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { t } = useI18n();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
     <main className="min-h-screen bg-background">
@@ -52,10 +59,40 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <FormCard title={t("loginTitle")} description={t("loginSubtitle")} asForm className="order-1 mx-auto w-full max-w-md lg:order-2">
+        <FormCard
+          title={t("loginTitle")}
+          description={t("loginSubtitle")}
+          asForm
+          showSuccessToast={false}
+          className="order-1 mx-auto w-full max-w-md lg:order-2"
+          onValidSubmit={async (values) => {
+            setIsSubmitting(true);
+            try {
+              const response = await loginAuthUser({
+                email: values.email,
+                password: values.password,
+              });
+              dispatch(setAuthUser(response.user));
+              toast({
+                tone: "success",
+                title: "Signed in",
+                description: "Welcome back to KoshPilot.",
+              });
+              router.replace("/app");
+            } catch (error) {
+              toast({
+                tone: "error",
+                title: "Login failed",
+                description: error instanceof Error ? error.message : "Please try again.",
+              });
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+        >
           <FormGrid columns={1}>
-            <TextField label={t("loginEmail")} name="email" required type="email" defaultValue="owner@koshpilot.app" />
-            <TextField label={t("loginPassword")} name="password" required type="password" minLength={8} defaultValue="demo@1234" />
+            <TextField label={t("loginEmail")} name="email" required type="email" placeholder="you@company.com" autoComplete="email" />
+            <TextField label={t("loginPassword")} name="password" required type="password" minLength={8} placeholder="Enter your password" autoComplete="current-password" />
             <div className="flex items-center justify-between gap-4">
               <CheckboxCard label={t("rememberMe")} defaultChecked />
               <Link href="/forgot-password" className="text-sm font-semibold text-primary hover:underline">
@@ -65,23 +102,10 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              onClick={(event) => {
-                const form = event.currentTarget.closest("form");
-                window.setTimeout(() => {
-                  if (form?.dataset.submitted === "true") router.push("/app");
-                });
-              }}
+              disabled={isSubmitting}
             >
               <LockKeyhole className="h-4 w-4" />
               {t("loginButton")}
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => router.push("/app")}
-            >
-              {t("demoLogin")}
-              <ArrowRight className="h-4 w-4" />
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               New to KoshPilot?{" "}

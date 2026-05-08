@@ -3,9 +3,10 @@
 import { Building2, Sparkles, TrendingUp, Truck, Users } from "lucide-react";
 import { Badge, Button, Card, DataTable } from "@/components/ui";
 import { FormCard, FormGrid, SelectField, TextField } from "@/components/form-kit";
-import { aiCreditSummary, aiPlans, aiUsageLogs, companies, ewayBills, planAddOns, users } from "@/lib/data";
+import { aiCreditSummary, aiUsageLogs, companies, ewayBills, users } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { useAppSelector } from "@/store/hooks";
+import { usePlanAddOns, usePlans } from "@/lib/use-plans";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +27,8 @@ export function useCreditWallet() {
 
 export function useCurrentPlan() {
   const planId = useAppSelector((state) => state.ui.aiPlan);
-  return aiPlans.find((plan) => plan.id === planId) ?? aiPlans[0];
+  const { plans } = usePlans();
+  return plans.find((plan) => plan.id === planId) ?? plans[0];
 }
 
 export function CreditProgress({ compact = false }: { compact?: boolean }) {
@@ -65,7 +67,7 @@ export function CreditWalletButton() {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-bold">Common credit wallet</p>
-            <p className="text-xs text-muted-foreground">{plan.name} plan. Shared by AI actions across all pages</p>
+            <p className="text-xs text-muted-foreground">{plan?.name ?? "Plan"} plan. Shared by AI actions across all pages</p>
           </div>
           <Badge tone={percent >= 100 ? "red" : percent >= 80 ? "amber" : "green"}>{percent}% used</Badge>
         </div>
@@ -95,12 +97,16 @@ export function CreditSummaryCards() {
   const { t } = useI18n();
   const { used, limit, remaining, percent } = useCreditWallet();
   const plan = useCurrentPlan();
+  const userLimit = plan?.userLimit ?? 0;
+  const companyLimit = plan?.companyLimit ?? 0;
+  const companyLimitLabel = plan?.companyLimitLabel ?? "0 companies";
+  const ewayBillLimit = plan?.ewayBillLimit ?? 0;
   const activeOrInvitedUsers = users.filter((user) => user.status === "Active" || user.status === "Invited").length;
   const usageCards = [
-    ["Users", `${activeOrInvitedUsers}/${plan.userLimit}`, "Active + invited seats", Users, activeOrInvitedUsers >= plan.userLimit ? "red" : "green"],
+    ["Users", `${activeOrInvitedUsers}/${userLimit}`, "Active + invited seats", Users, userLimit > 0 && activeOrInvitedUsers >= userLimit ? "red" : "green"],
     ["AI credits", `${used}/${limit}`, `${remaining} remaining this month`, Sparkles, percent >= 100 ? "red" : percent >= 80 ? "amber" : "blue"],
-    ["Companies", `${companies.length}/${plan.companyLimit}${plan.id === "business" ? "+" : ""}`, "Company workspaces", Building2, companies.length > plan.companyLimit ? "amber" : "violet"],
-    ["E-way bills", `${ewayBills.length}/${plan.ewayBillLimit}`, "Generated this period", Truck, ewayBills.length >= plan.ewayBillLimit ? "red" : "green"],
+    ["Companies", `${companies.length}/${companyLimitLabel}`, "Company workspaces", Building2, companyLimit > 0 && companies.length > companyLimit ? "amber" : "violet"],
+    ["E-way bills", `${ewayBills.length}/${ewayBillLimit}`, "Generated this period", Truck, ewayBillLimit > 0 && ewayBills.length >= ewayBillLimit ? "red" : "green"],
   ] as const;
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -127,7 +133,7 @@ export function CommonCreditWalletCard() {
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold">Common AI credit wallet</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{plan.name} includes {plan.aiCreditLimit.toLocaleString("en-IN")} monthly credits. Every AI action uses this single shared balance.</p>
+          <p className="mt-1 text-sm text-muted-foreground">{plan ? `${plan.name} includes ${plan.aiCreditLimit.toLocaleString("en-IN")} monthly credits.` : "Plan details load from the backend."} Every AI action uses this single shared balance.</p>
         </div>
         <Badge tone={percent >= 100 ? "red" : percent >= 80 ? "amber" : "green"}>{percent}% used</Badge>
       </div>
@@ -159,6 +165,7 @@ export function CreditSettingsPanel() {
   const { t } = useI18n();
   const { limit } = useCreditWallet();
   const plan = useCurrentPlan();
+  const { plans } = usePlans();
   return (
     <FormCard
       title="Plan and limits"
@@ -166,10 +173,10 @@ export function CreditSettingsPanel() {
       asForm
     >
       <FormGrid>
-        <TextField label="Total AI credits" required type="number" min={100} defaultValue={String(limit)} />
-        <TextField label={t("warningLimit")} required type="number" min={50} defaultValue={String(aiCreditSummary.warningAt)} />
-        <SelectField label="Plan" required defaultValue={plan.name} options={aiPlans.map((item) => item.name)} />
-        <SelectField label="Over-limit action" required defaultValue="Block new prompts" options={["Block new prompts", "Require owner approval"]} />
+        <TextField label="Total AI credits" required type="number" min={100} placeholder={String(limit)} />
+        <TextField label={t("warningLimit")} required type="number" min={50} placeholder={String(aiCreditSummary.warningAt)} />
+        <SelectField label="Plan" required options={plans.map((item) => item.name)} placeholder={plan?.name ? `Current: ${plan.name}` : "Select plan"} />
+        <SelectField label="Over-limit action" required options={["Block new prompts", "Require owner approval"]} placeholder="Select action" />
       </FormGrid>
       <Button type="submit" className="mt-5">{t("saveLimit")}</Button>
     </FormCard>
@@ -177,12 +184,13 @@ export function CreditSettingsPanel() {
 }
 
 export function PlanAddOnCards() {
+  const { addOns } = usePlanAddOns();
   return (
     <Card className="p-5">
       <h2 className="text-xl font-bold">Add-ons</h2>
       <p className="mt-1 text-sm text-muted-foreground">Use add-ons instead of forcing a full upgrade when the business only needs one extra limit.</p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {planAddOns.map((addOn) => (
+        {addOns.map((addOn) => (
           <div key={addOn.id} className="rounded-2xl border bg-background p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="font-bold">{addOn.name}</p>

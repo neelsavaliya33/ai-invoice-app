@@ -10,14 +10,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge, Button, Card, Input } from "@/components/ui";
 import { FormCard, FormGrid, TextField } from "@/components/form-kit";
 import { toast } from "@/components/toast";
-import { aiPlans } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
-import { setAiPlan } from "@/store/store";
+import { setAiPlan, setAuthUser } from "@/store/store";
 import { cn } from "@/lib/utils";
-
-const freePlan = aiPlans.find((plan) => plan.id === "free") ?? aiPlans[0];
-const DEMO_OTP = "246810";
+import { registerAuthUser, requestAuthOtp, verifyAuthOtp } from "@/lib/api";
+import { useTrialConfig } from "@/lib/use-plans";
 
 type SignupStep = "email" | "otp" | "details";
 
@@ -25,40 +23,72 @@ export default function SignupPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { t } = useI18n();
+  const { trialConfig } = useTrialConfig();
+  const trialDaysLabel = trialConfig?.trialDays ? `${trialConfig.trialDays}-day` : "configured";
   const [step, setStep] = useState<SignupStep>("email");
-  const [email, setEmail] = useState("owner@koshpilot.in");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [devOtp, setDevOtp] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const enteredOtp = otp.join("");
 
-  function sendOtp(nextEmail: string) {
-    setEmail(nextEmail);
-    setOtp(Array(6).fill(""));
-    setStep("otp");
-    toast({
-      tone: "success",
-      title: "Verification code sent",
-      description: `Use ${DEMO_OTP} for this local demo. In production, this code is delivered to ${nextEmail}.`,
-    });
-  }
-
-  function verifyOtp() {
-    if (enteredOtp !== DEMO_OTP) {
+  async function sendOtp(nextEmail: string) {
+    setIsSubmitting(true);
+    try {
+      const response = await requestAuthOtp(nextEmail, "verify_email");
+      setEmail(response.email);
+      setDevOtp(response.devOtp ?? "");
+      setOtp(Array(6).fill(""));
+      setStep("otp");
+      toast({
+        tone: "success",
+        title: "Verification code sent",
+        description: response.devOtp
+          ? `SMTP request created. Local debug OTP: ${response.devOtp}.`
+          : `Check ${nextEmail} for the verification code.`,
+      });
+    } catch (error) {
       toast({
         tone: "error",
-        title: "Code does not match",
-        description: `For this local demo, enter ${DEMO_OTP} to continue.`,
+        title: "Could not send OTP",
+        description: error instanceof Error ? error.message : "Please try again.",
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
+  }
 
-    setStep("details");
-    toast({
-      tone: "success",
-      title: "Email verified",
-      description: "Add owner details to create your KoshPilot login.",
-    });
+  async function verifyOtp() {
+    setIsSubmitting(true);
+    try {
+      const response = await verifyAuthOtp(email, enteredOtp, "verify_email");
+      if (response.user && response.auth) {
+        dispatch(setAuthUser(response.user));
+        toast({
+          tone: "success",
+          title: "Email verified",
+          description: "This account already exists, so you are signed in now.",
+        });
+        router.replace("/app");
+        return;
+      }
+      setStep("details");
+      toast({
+        tone: "success",
+        title: "Email verified",
+        description: "Add owner details to create your KoshPilot login.",
+      });
+    } catch (error) {
+      toast({
+        tone: "error",
+        title: "OTP verification failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function updateOtp(index: number, value: string) {
@@ -113,12 +143,12 @@ export default function SignupPage() {
           <Card className="mt-6 p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-black">Free workspace included</p>
+                <p className="font-black">{trialDaysLabel} free trial included</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Start with {freePlan.aiCreditLimit} common AI credits and sample workflows before choosing a paid plan.
+                  Create your account first. Company setup starts after login, and no plan selection or payment is needed during signup.
                 </p>
               </div>
-              <Badge tone="green">{freePlan.name}</Badge>
+              <Badge tone="green">{trialConfig?.aiCreditLimit ?? "Configured"} trial AI credits</Badge>
             </div>
           </Card>
         </div>
@@ -159,8 +189,8 @@ export default function SignupPage() {
               onValidSubmit={(values) => sendOtp(values.email)}
             >
               <FormGrid columns={1}>
-                <TextField label="Work email" name="email" required type="email" defaultValue={email} />
-                <Button type="submit" className="w-full">
+                <TextField label="Work email" name="email" required type="email" placeholder={email || "you@company.com"} autoComplete="email" />
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
                   Send OTP
                   <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -178,7 +208,7 @@ export default function SignupPage() {
             <Card className="p-5">
               <h2 className="text-xl font-bold">Enter verification code</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Enter the 6-digit code for <span className="font-semibold text-foreground">{email}</span>. For this demo, use <span className="font-semibold text-foreground">{DEMO_OTP}</span>.
+                Enter the 6-digit code sent to <span className="font-semibold text-foreground">{email}</span>{devOtp ? <>. Local debug OTP: <span className="font-semibold text-foreground">{devOtp}</span></> : "."}
               </p>
               <div className="mt-5 grid grid-cols-6 gap-2">
                 {otp.map((digit, index) => (
@@ -205,11 +235,11 @@ export default function SignupPage() {
                 ))}
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <Button disabled={enteredOtp.length !== 6} onClick={verifyOtp}>
+                <Button disabled={enteredOtp.length !== 6 || isSubmitting} onClick={verifyOtp}>
                   Verify OTP
                   <CheckCircle2 className="h-4 w-4" />
                 </Button>
-                <Button variant="secondary" onClick={() => sendOtp(email)}>
+                <Button variant="secondary" disabled={isSubmitting} onClick={() => sendOtp(email)}>
                   Resend OTP
                 </Button>
               </div>
@@ -228,25 +258,52 @@ export default function SignupPage() {
               description="These details create your secure admin profile. Company GST, address, and financial year are collected next."
               asForm
               showSuccessToast={false}
-              onValidSubmit={(values) => {
-                dispatch(setAiPlan({ plan: "free", limit: freePlan.aiCreditLimit, used: 0 }));
-                toast({
-                  tone: "success",
-                  title: "Account ready",
-                  description: `${values["full-name"]}, add your first company to finish setup.`,
-                });
-                window.setTimeout(() => router.push("/onboarding/company"), 650);
+              onValidSubmit={async (values) => {
+                if (values.password !== values["confirm-password"]) {
+                  toast({
+                    tone: "error",
+                    title: "Password mismatch",
+                    description: "Password and confirm password must match.",
+                  });
+                  return;
+                }
+                setIsSubmitting(true);
+                try {
+                  const response = await registerAuthUser({
+                    email,
+                    name: values["full-name"],
+                    password: values.password,
+                  });
+                  dispatch(setAuthUser(response.user));
+                  if (trialConfig) {
+                    dispatch(setAiPlan({ plan: "free-trial", limit: trialConfig.aiCreditLimit, used: 0 }));
+                  }
+                  toast({
+                    tone: "success",
+                    title: "Trial started",
+                    description: `${values["full-name"]}, your ${trialDaysLabel} free trial is ready. Add your first company to finish setup.`,
+                  });
+                  window.setTimeout(() => router.push("/onboarding/company"), 650);
+                } catch (error) {
+                  toast({
+                    tone: "error",
+                    title: "Could not create account",
+                    description: error instanceof Error ? error.message : "Please try again.",
+                  });
+                } finally {
+                  setIsSubmitting(false);
+                }
               }}
             >
               <FormGrid columns={1}>
-                <TextField label="Full name" name="full-name" required minLength={3} defaultValue="Neel Savaliya" />
+                <TextField label="Full name" name="full-name" required minLength={3} placeholder="Your full name" autoComplete="name" />
                 <TextField label="Verified email" name="email" required type="email" value={email} readOnly />
-                <TextField label="Mobile number" name="phone" required type="tel" pattern="^\\+91\\s?[0-9\\s]{10,14}$" defaultValue="+91 98765 43210" />
-                <TextField label="Password" name="password" required type="password" minLength={8} defaultValue="demo@1234" />
-                <TextField label="Confirm password" name="confirm-password" required type="password" minLength={8} defaultValue="demo@1234" />
-                <Button type="submit" className="w-full">
+                <TextField label="Mobile number" name="phone" required type="tel" pattern="^(\\+91|91|0)?[\\s-]?[6-9][0-9]{4}[\\s-]?[0-9]{5}$" placeholder="+91 98765 43210" autoComplete="tel" />
+                <TextField label="Password" name="password" required type="password" minLength={8} placeholder="Create a strong password" autoComplete="new-password" />
+                <TextField label="Confirm password" name="confirm-password" required type="password" minLength={8} placeholder="Re-enter password" autoComplete="new-password" />
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
                   <LockKeyhole className="h-4 w-4" />
-                  Create account and continue
+                  Start trial and continue
                   <Sparkles className="h-4 w-4" />
                 </Button>
               </FormGrid>

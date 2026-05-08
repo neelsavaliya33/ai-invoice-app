@@ -16,7 +16,8 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarDays, X } from "lucide-react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "./toast";
 
 type Option = string | { label: string; value: string };
@@ -85,6 +86,17 @@ function validateControl(
     control.validity.typeMismatch
   ) {
     return `Enter a valid email address for ${label}.`;
+  }
+
+  if (control instanceof HTMLInputElement && control.type === "tel") {
+    const digits = value.replace(/\D/g, "");
+    const isIndianPhone =
+      digits.length === 10 ||
+      (digits.length === 12 && digits.startsWith("91")) ||
+      (digits.length === 11 && digits.startsWith("0"));
+    if (isIndianPhone) {
+      return "";
+    }
   }
 
   if (
@@ -282,6 +294,75 @@ export function SlideFormPanel({
   );
 }
 
+export function FormModal({
+  open,
+  onOpenChange,
+  title = "Form",
+  children,
+  className,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const [resetKey, setResetKey] = useState(0);
+
+  const close = useCallback(() => {
+    setResetKey((current) => current + 1);
+    onOpenChange(false);
+  }, [onOpenChange]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [close, open]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed left-0 top-0 z-[140] flex h-dvh w-dvw items-center justify-center overflow-y-auto p-4">
+      <button
+        type="button"
+        className="fixed inset-0 bg-black/65 backdrop-blur-sm"
+        aria-label="Close form modal"
+        onClick={close}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={cn(
+          "relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto rounded-[2rem] bg-transparent text-card-foreground shadow-2xl animate-fade-up",
+          className,
+        )}
+      >
+        <div key={resetKey}>{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function FormGrid({
   children,
   columns = 2,
@@ -433,21 +514,22 @@ export function SelectField({
   onChange,
   defaultValue,
   value,
+  placeholder,
   ...props
 }: React.SelectHTMLAttributes<HTMLSelectElement> & {
   label: string;
   helper?: string;
   options: Option[];
+  placeholder?: string;
 }) {
   const context = useContext(FormValidationContext);
   const resolvedName = fieldName(label, name);
   const error = context?.errors[resolvedName];
-  const initialValue = String(value ?? defaultValue ?? optionValue(options[0] ?? ""));
+  const initialValue = String(value ?? defaultValue ?? "");
   const [selectedValue, setSelectedValue] = useState(initialValue);
-  const selectedLabel = optionLabel(
-    options.find((option) => optionValue(option) === selectedValue) ??
-      selectedValue,
-  );
+  const selectedLabel = selectedValue
+    ? optionLabel(options.find((option) => optionValue(option) === selectedValue) ?? selectedValue)
+    : "";
   return (
     <Field
       label={label}
@@ -481,9 +563,9 @@ export function SelectField({
                 selectedValue ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              {selectedLabel || "Select option"}
+              {selectedLabel || placeholder || `Select ${label.toLowerCase()}`}
             </span>
-            <span className="shrink-0 text-xs text-muted-foreground">Change</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{selectedValue ? "Change" : "Select"}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -523,10 +605,12 @@ export function TextareaField({
   required,
   name,
   onInput,
+  fieldClassName,
   ...props
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   helper?: string;
+  fieldClassName?: string;
 }) {
   const context = useContext(FormValidationContext);
   const resolvedName = fieldName(label, name);
@@ -537,6 +621,7 @@ export function TextareaField({
       helper={helper}
       required={required}
       error={error}
+      className={fieldClassName}
     >
       <Textarea
         {...props}
@@ -559,18 +644,26 @@ export function CheckboxCard({
   label,
   description,
   defaultChecked,
+  name,
 }: {
   label: string;
   description?: string;
   defaultChecked?: boolean;
+  name?: string;
 }) {
   return (
-    <label className="flex items-start gap-3 rounded-2xl border bg-background p-3 text-sm">
+    <label className="group flex cursor-pointer items-start gap-3 rounded-2xl border bg-background p-3 text-sm transition hover:border-primary/50 hover:bg-primary/5">
       <input
         type="checkbox"
+        name={name}
         defaultChecked={defaultChecked}
-        className="mt-0.5 h-4 w-4 rounded"
+        className="peer sr-only"
       />
+      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-lg border border-border bg-card text-transparent shadow-sm transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring">
+        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
+          <path d="M3.5 8.2 6.4 11 12.5 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
       <span>
         <span className="block font-medium">{label}</span>
         {description ? (
@@ -593,10 +686,24 @@ export function FormActions({
   extra?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 pt-2">
+    <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
       <Button type="submit">{primary}</Button>
       <Button variant="secondary">{secondary}</Button>
       {extra}
+    </div>
+  );
+}
+
+export function FormSubmitRow({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("mt-5 flex flex-wrap items-center justify-end gap-3", className)}>
+      {children}
     </div>
   );
 }

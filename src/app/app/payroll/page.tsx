@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HrAiCard, HrFilters, HrHeader, HrKpis, PayrollForm, PayrollTable } from "@/components/hr-workflow";
-import { SlideFormPanel } from "@/components/form-kit";
+import { FormModal } from "@/components/form-kit";
 
 export default function PayrollPage() {
   const [status, setStatus] = useState("All statuses");
@@ -17,9 +17,9 @@ export default function PayrollPage() {
         <PayrollTable status={status} month={month} />
         <HrAiCard payroll />
       </div>
-      <SlideFormPanel open={isFormOpen}>
+      <FormModal open={isFormOpen} onOpenChange={setIsFormOpen} title="Payroll run">
         <PayrollForm onClose={() => setIsFormOpen(false)} />
-      </SlideFormPanel>
+      </FormModal>
     </div>
   );
 }

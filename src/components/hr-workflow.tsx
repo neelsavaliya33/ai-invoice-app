@@ -1,12 +1,14 @@
 "use client";
 
 import { Badge, Button, Card, DataTable, SectionTitle } from "@/components/ui";
-import { CloseFormButton, DatePickerField, FilterBar, FormCard, FormGrid, SelectField, TextField, TextareaField } from "@/components/form-kit";
+import { CloseFormButton, DatePickerField, FilterBar, FormCard, FormGrid, FormSubmitRow, SelectField, TextField, TextareaField } from "@/components/form-kit";
 import { LookupSelectField } from "@/components/lookup-select-field";
+import { WorkflowActionMenu } from "@/components/workflow-actions";
 import { employees, payrollRuns } from "@/lib/data";
 import { currency } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { Plus } from "lucide-react";
+import { toast } from "@/components/toast";
 
 export function HrHeader({ type, onActionClick }: { type: "employees" | "payroll"; onActionClick?: () => void }) {
   const { t } = useI18n();
@@ -49,7 +51,7 @@ export function EmployeeTable({ query = "", department = "All departments", stat
   });
   return (
     <DataTable
-      headers={[t("employee"), t("role"), t("department"), t("attendance"), t("salary"), t("status")]}
+      headers={[t("employee"), t("role"), t("department"), t("attendance"), t("salary"), t("status"), "Actions"]}
       rows={rows.map((employee) => [
         <span key="name" className="font-semibold">{employee.name}<span className="block text-xs font-normal text-muted-foreground">{employee.id}</span></span>,
         employee.role,
@@ -57,6 +59,7 @@ export function EmployeeTable({ query = "", department = "All departments", stat
         employee.attendance,
         currency(employee.salary),
         <Badge key="status" tone={employee.status === "Active" ? "green" : "amber"}>{employee.status}</Badge>,
+        <WorkflowActionMenu key="actions" label="Employee" recordLabel={employee.name} actions={["Attendance entry", "Leave request", "Salary revision", "Employee document", "Exit employee"]} />,
       ])}
     />
   );
@@ -71,7 +74,7 @@ export function PayrollTable({ status = "All statuses", month = "All months" }: 
   });
   return (
     <DataTable
-      headers={[t("run"), t("period"), t("employees"), t("gross"), t("deductions"), t("net"), t("status")]}
+      headers={[t("run"), t("period"), t("employees"), t("gross"), t("deductions"), t("net"), t("status"), "Actions"]}
       rows={rows.map((run) => [
         <span key="id" className="font-semibold">{run.id}</span>,
         run.period,
@@ -80,6 +83,7 @@ export function PayrollTable({ status = "All statuses", month = "All months" }: 
         currency(run.deductions),
         currency(run.net),
         <Badge key="status" tone={run.status === "Paid" ? "green" : "amber"}>{run.status}</Badge>,
+        <WorkflowActionMenu key="actions" label="Payroll" recordLabel={run.id} actions={["Payslip preview", "Deductions", "Reimbursements", "Approve payroll", "Mark paid", "Export payslips"]} />,
       ])}
     />
   );
@@ -103,7 +107,7 @@ export function EmployeeForm({ onClose }: { onClose?: () => void }) {
   return (
     <FormCard title={t("employeeProfile")} description={t("employeeProfileDescription")} action={onClose ? <CloseFormButton onClick={onClose} /> : undefined} asForm>
       <FormGrid columns={3}>
-        <TextField label={t("employeeId")} required pattern="EMP-[0-9]{3,}" defaultValue="EMP-005" />
+        <TextField label={t("employeeId")} required pattern="EMP-[0-9]{3,}" placeholder="EMP-005" />
         <TextField label={t("fullName")} required minLength={3} />
         <TextField label="Email" required type="email" />
         <TextField label={t("phone")} required type="tel" pattern="^\\+91\\s?[0-9\\s]{10,14}$" />
@@ -112,9 +116,11 @@ export function EmployeeForm({ onClose }: { onClose?: () => void }) {
         <DatePickerField label={t("joiningDate")} required />
         <TextField label={t("monthlySalary")} required type="number" min={1} />
         <LookupSelectField label={t("employmentType")} group="employment-types" required />
-        <TextareaField label={t("hrNotes")} minLength={8} />
+        <TextareaField label={t("hrNotes")} minLength={8} fieldClassName="md:col-span-2 xl:col-span-3" />
       </FormGrid>
-      <Button type="submit" className="mt-5">{t("saveEmployee")}</Button>
+      <FormSubmitRow>
+        <Button type="submit">{t("saveEmployee")}</Button>
+      </FormSubmitRow>
     </FormCard>
   );
 }
@@ -124,7 +130,7 @@ export function PayrollForm({ onClose }: { onClose?: () => void }) {
   return (
     <FormCard title={t("payrollRun")} description={t("payrollRunDescription")} action={onClose ? <CloseFormButton onClick={onClose} /> : undefined} asForm>
       <FormGrid columns={3}>
-        <TextField label={t("payrollRunId")} required pattern="PAYRUN-[0-9]{4}" defaultValue="PAYRUN-0626" />
+        <TextField label={t("payrollRunId")} required pattern="PAYRUN-[0-9]{4}" placeholder="PAYRUN-0626" />
         <SelectField label={t("period")} required options={["Jun 2026", "May 2026", "Apr 2026"]} />
         <DatePickerField label={t("paymentDate")} required />
         <TextField label={t("grossSalary")} required type="number" min={1} />
@@ -132,9 +138,11 @@ export function PayrollForm({ onClose }: { onClose?: () => void }) {
         <TextField label={t("reimbursements")} required type="number" min={0} />
         <LookupSelectField label={t("approvalStatus")} group="payroll-statuses" required />
         <LookupSelectField label={t("paymentMode")} group="payment-methods" required />
-        <TextareaField label={t("payrollNotes")} minLength={8} />
+        <TextareaField label={t("payrollNotes")} minLength={8} fieldClassName="md:col-span-2 xl:col-span-3" />
       </FormGrid>
-      <Button type="submit" className="mt-5">{t("savePayrollRun")}</Button>
+      <FormSubmitRow>
+        <Button type="submit">{t("savePayrollRun")}</Button>
+      </FormSubmitRow>
     </FormCard>
   );
 }
@@ -149,7 +157,12 @@ export function HrAiCard({ payroll = false }: { payroll?: boolean }) {
           ? "May payroll is still in draft. Review deductions for Priya and reimbursements before generating payslips."
           : "Nilesh has lower attendance this month. Review leave balance before approving payroll for the period."}
       </p>
-      <Button className="mt-5 w-full">{payroll ? t("reviewPayroll") : t("reviewAttendance")}</Button>
+      <Button
+        className="mt-5 w-full"
+        onClick={() => toast({ tone: "success", title: payroll ? "Payroll review opened" : "Attendance review opened", description: "The review action was queued in demo mode." })}
+      >
+        {payroll ? t("reviewPayroll") : t("reviewAttendance")}
+      </Button>
     </Card>
   );
 }

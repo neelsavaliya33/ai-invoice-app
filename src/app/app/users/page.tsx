@@ -3,22 +3,25 @@
 import { useState } from "react";
 import { UserRows } from "@/components/workflow";
 import { Button, Card, SectionTitle } from "@/components/ui";
-import { CheckboxCard, CloseFormButton, FormCard, FormGrid, SlideFormPanel, TextField } from "@/components/form-kit";
+import { CheckboxCard, CloseFormButton, FormCard, FormGrid, FormModal, FormSubmitRow, TextField } from "@/components/form-kit";
 import { LookupSelectField } from "@/components/lookup-select-field";
 import { useI18n } from "@/lib/i18n";
 import { users } from "@/lib/data";
 import { useCurrentPlan } from "@/components/credit-system";
 import { toast } from "@/components/toast";
+import { RolePermissionForm } from "@/components/workflow-actions";
 
 const permissions = ["View invoices", "Create invoices", "Edit invoices", "Record payments", "View customers", "Manage stock", "Export reports", "Manage users", "View audit logs"];
 
 export default function UsersPage() {
   const { t } = useI18n();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isRoleOpen, setIsRoleOpen] = useState(false);
   const plan = useCurrentPlan();
   const usedSeats = users.filter((user) => user.status === "Active" || user.status === "Invited").length;
-  const remainingSeats = Math.max(0, plan.userLimit - usedSeats);
-  const limitReached = remainingSeats <= 0;
+  const planLimit = plan?.userLimit ?? 0;
+  const remainingSeats = Math.max(0, planLimit - usedSeats);
+  const limitReached = planLimit > 0 && remainingSeats <= 0;
   return (
     <div className="space-y-6">
       <SectionTitle
@@ -43,10 +46,10 @@ export default function UsersPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold">User seats</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Active and invited users count toward the {plan.name} plan limit.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Active and invited users count toward the {plan?.name ?? "selected"} plan limit.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-2xl border bg-background px-4 py-2 text-sm font-black">{usedSeats}/{plan.userLimit} used</span>
+            <span className="rounded-2xl border bg-background px-4 py-2 text-sm font-black">{usedSeats}/{planLimit || "API"} used</span>
             <span className="rounded-2xl border bg-background px-4 py-2 text-sm font-black">{remainingSeats} remaining</span>
           </div>
         </div>
@@ -58,8 +61,7 @@ export default function UsersPage() {
         ) : null}
       </Card>
       <UserRows />
-      <div className={`grid gap-6 ${isFormOpen ? "xl:grid-cols-2" : ""}`}>
-        <SlideFormPanel open={isFormOpen}>
+      <FormModal open={isFormOpen} onOpenChange={setIsFormOpen} title="Invite user">
           <FormCard title="Invite user" description="Add a team member with role-based access for this company workspace." action={<CloseFormButton onClick={() => setIsFormOpen(false)} />} asForm>
             <FormGrid>
               <TextField label="Full name" required minLength={3} placeholder="Enter name" />
@@ -69,19 +71,30 @@ export default function UsersPage() {
               <LookupSelectField label="Access scope" group="access-scopes" required />
               <TextField label="Custom message" minLength={8} placeholder="Optional invitation note" />
             </FormGrid>
-            <Button type="submit" className="mt-5">Send invite</Button>
+            <FormSubmitRow>
+              <Button type="submit">Send invite</Button>
+            </FormSubmitRow>
           </FormCard>
-        </SlideFormPanel>
+      </FormModal>
+      <div className="grid gap-6">
         <Card className="p-5">
-          <h2 className="text-xl font-bold">Role permissions</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold">Role permissions</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Open the permission editor to assign module capabilities from the backend catalog.</p>
+            </div>
+            <Button onClick={() => setIsRoleOpen(true)}>Edit role</Button>
+          </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {permissions.map((permission) => (
               <CheckboxCard key={permission} label={permission} defaultChecked />
             ))}
           </div>
-          <Button className="mt-5">Save role</Button>
         </Card>
       </div>
+      <FormModal open={isRoleOpen} onOpenChange={setIsRoleOpen} title="Role permission editor">
+        <RolePermissionForm onClose={() => setIsRoleOpen(false)} />
+      </FormModal>
     </div>
   );
 }

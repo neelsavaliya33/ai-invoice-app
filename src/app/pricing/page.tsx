@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowRight,
@@ -13,7 +15,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge, Card, DataTable } from "@/components/ui";
-import { aiPlans, planAddOns } from "@/lib/data";
+import { type UiPlan, usePlanAddOns, usePlans, useTrialConfig } from "@/lib/use-plans";
 
 const includedFeatures = [
   "GST invoices and customer/vendor ledgers",
@@ -31,8 +33,30 @@ const faqItems = [
   ["What happens after the trial?", "The account stays on the Free plan unless the owner upgrades. No card is required for trial signup."],
 ] as const;
 
+function planGridClass(planCount: number) {
+  if (planCount <= 1) return "mx-auto max-w-md";
+  if (planCount === 2) return "mx-auto max-w-5xl md:grid-cols-2";
+  if (planCount === 3) return "mx-auto max-w-6xl md:grid-cols-2 xl:grid-cols-3";
+  return "md:grid-cols-2 xl:grid-cols-4";
+}
+
+function primaryLimitRows(plan: UiPlan) {
+  return [
+    [Users, plan.userLimitLabel],
+    [Building2, plan.companyLimitLabel],
+    [Sparkles, `${plan.aiCreditLimit.toLocaleString("en-IN")} AI credits/month`],
+    [Truck, `${plan.ewayBillLimit.toLocaleString("en-IN")} e-way bills`],
+  ] as const;
+}
+
 export default function PricingPage() {
-  const recommendedPlan = aiPlans.find((plan) => plan.recommended) ?? aiPlans[2];
+  const { plans } = usePlans();
+  const { addOns } = usePlanAddOns();
+  const { trialConfig } = useTrialConfig();
+  const recommendedPlan = plans.find((plan) => plan.recommended) ?? plans[0];
+  const trialPlanName = trialConfig?.planName ?? "trial";
+  const trialDays = trialConfig?.trialDays;
+  const trialDaysLabel = trialDays ? `${trialDays} days` : "your configured trial";
 
   return (
     <main className="min-h-screen bg-background">
@@ -67,7 +91,7 @@ export default function PricingPage() {
             Simple annual plans for Indian MSMEs
           </h1>
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Start free, try Professional for 14 days, and upgrade only when you need more users,
+            Start free, try {trialPlanName} for {trialDaysLabel}, and upgrade only when you need more users,
             companies, e-way bills, or AI credits.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -81,8 +105,17 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {aiPlans.map((plan) => (
+        {!plans.length ? (
+          <Card className="mx-auto mt-12 max-w-2xl p-6 text-center">
+            <h2 className="text-2xl font-black">Pricing plans are loading from backend</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Start the backend, run migrations, and seed plans to display the live plan catalog here.
+            </p>
+          </Card>
+        ) : null}
+
+        {plans.length ? <div className={`mt-12 grid gap-4 ${planGridClass(plans.length)}`}>
+          {plans.map((plan) => (
             <Card key={plan.id} className={`relative flex flex-col p-5 ${plan.recommended ? "border-primary bg-primary/10" : ""}`}>
               {plan.recommended ? (
                 <Badge tone="green" className="absolute right-4 top-4">Best for most</Badge>
@@ -94,10 +127,12 @@ export default function PricingPage() {
                 <p className="mt-1 text-xs text-muted-foreground">{plan.billingPeriod}</p>
               </div>
               <div className="mt-5 grid gap-3 rounded-2xl border bg-background p-4 text-sm">
-                <span className="flex items-center gap-2 font-semibold"><Users className="h-4 w-4 text-primary" /> {plan.userLimit} user{plan.userLimit > 1 ? "s" : ""}</span>
-                <span className="flex items-center gap-2 font-semibold"><Building2 className="h-4 w-4 text-primary" /> {plan.companyLimit}{plan.id === "business" ? "+" : ""} compan{plan.companyLimit > 1 ? "ies" : "y"}</span>
-                <span className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> {plan.aiCreditLimit.toLocaleString("en-IN")} AI credits/month</span>
-                <span className="flex items-center gap-2 font-semibold"><Truck className="h-4 w-4 text-primary" /> {plan.ewayBillLimit.toLocaleString("en-IN")} e-way bills</span>
+                {primaryLimitRows(plan).map(([Icon, label]) => (
+                  <span key={label} className="flex items-center gap-2 font-semibold">
+                    <Icon className="h-4 w-4 text-primary" />
+                    {label}
+                  </span>
+                ))}
               </div>
               <div className="mt-5 grid gap-2">
                 {plan.featureHighlights.map((feature) => (
@@ -115,33 +150,38 @@ export default function PricingPage() {
                     {feature}
                   </span>
                 ))}
+                {plan.modules.length ? (
+                  <p className="pt-2 text-xs font-semibold text-muted-foreground">
+                    {plan.modules.length} modules · {plan.capabilityCount} capabilities enabled
+                  </p>
+                ) : null}
               </div>
               <Link className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-black text-primary-foreground" href="/signup">
-                {plan.id === "free" ? "Start Free" : plan.id === "business" ? "Contact sales" : "Try 14 days"}
+                {plan.ctaLabel}
               </Link>
             </Card>
           ))}
-        </div>
+        </div> : null}
       </section>
 
-      <section className="container-shell pb-16">
+      {recommendedPlan ? <section className="container-shell pb-16">
         <Card className="overflow-hidden p-0">
           <div className="grid gap-0 lg:grid-cols-[0.85fr_1.15fr]">
             <div className="bg-primary p-6 text-primary-foreground md:p-8">
-              <Badge className="bg-white/25 text-primary-foreground">Professional details</Badge>
-              <h2 className="mt-5 text-3xl font-black">Professional is now the main growth plan</h2>
+              <Badge className="bg-white/25 text-primary-foreground">{recommendedPlan.name} details</Badge>
+              <h2 className="mt-5 text-3xl font-black">{recommendedPlan.name} is the recommended growth plan</h2>
               <p className="mt-4 text-sm leading-7 text-primary-foreground/80">
-                It covers up to 3 companies, 5 users per company, 150 e-way bills, and 800 monthly AI credits so most MSMEs do not need an expensive higher tier.
+                It covers {recommendedPlan.companyLimitLabel}, {recommendedPlan.userLimitLabel}, {recommendedPlan.ewayBillLimit.toLocaleString("en-IN")} e-way bills, and {recommendedPlan.aiCreditLimit.toLocaleString("en-IN")} monthly AI credits based on the latest backend plan catalog.
               </p>
               <div className="mt-6 grid gap-3 text-sm font-bold">
-                <span>3 company workspaces</span>
-                <span>5 role-based users</span>
-                <span>800 shared AI credits/month</span>
-                <span>150 e-way bill drafts</span>
+                <span>{recommendedPlan.companyLimitLabel}</span>
+                <span>{recommendedPlan.userLimitLabel}</span>
+                <span>{recommendedPlan.aiCreditLimit.toLocaleString("en-IN")} shared AI credits/month</span>
+                <span>{recommendedPlan.ewayBillLimit.toLocaleString("en-IN")} e-way bill drafts</span>
               </div>
             </div>
             <div className="grid gap-3 p-6 md:grid-cols-2 md:p-8">
-              {recommendedPlan.featureDetails.map((feature) => (
+              {(recommendedPlan?.featureDetails ?? []).map((feature) => (
                 <div key={feature} className="rounded-2xl border bg-background p-4">
                   <CheckCircle2 className="h-5 w-5 text-primary" />
                   <p className="mt-3 text-sm font-semibold leading-6">{feature}</p>
@@ -150,7 +190,7 @@ export default function PricingPage() {
             </div>
           </div>
         </Card>
-      </section>
+      </section> : null}
 
       <section className="landing-band py-16">
         <div className="container-shell grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
@@ -184,7 +224,7 @@ export default function PricingPage() {
           <Badge tone="green">No payment integration in demo</Badge>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {planAddOns.map((addOn) => (
+          {addOns.map((addOn) => (
             <Card key={addOn.id} className="p-5">
               <BadgeIndianRupee className="h-6 w-6 text-primary" />
               <h3 className="mt-4 text-lg font-black">{addOn.name}</h3>
@@ -195,7 +235,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="container-shell pb-16">
+      {recommendedPlan ? <section className="container-shell pb-16">
         <Card className="p-5">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -208,18 +248,18 @@ export default function PricingPage() {
           </div>
           <DataTable
             headers={["Plan", "Annual price", "Users", "Companies", "AI credits", "E-way bills", "Trial"]}
-            rows={aiPlans.map((plan) => [
+            rows={plans.map((plan) => [
               <span key="plan" className="font-black">{plan.name}</span>,
               plan.price,
-              plan.userLimit,
-              `${plan.companyLimit}${plan.id === "business" ? "+" : ""}`,
+              plan.userLimitLabel,
+              plan.companyLimitLabel,
               plan.aiCreditLimit.toLocaleString("en-IN"),
               plan.ewayBillLimit.toLocaleString("en-IN"),
-              plan.trialDays ? `${plan.trialDays} days` : "Free forever",
+              plan.isFree ? "Free forever" : trialDaysLabel,
             ])}
           />
         </Card>
-      </section>
+      </section> : null}
 
       <section className="container-shell pb-20">
         <div className="grid gap-4 md:grid-cols-2">

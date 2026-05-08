@@ -2,7 +2,16 @@ import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type ThemeMode = "system" | "light" | "dark";
 type Language = "en" | "gu" | "hi" | "mr";
-type AiPlan = "free" | "basic" | "professional" | "business";
+export type AiPlan = string;
+export type AuthUser = {
+  id: number;
+  email: string;
+  name: string;
+  emailVerified: boolean;
+  hasCompany: boolean;
+  is_staff: boolean;
+  date_joined: string;
+};
 
 const uiSlice = createSlice({
   name: "ui",
@@ -15,6 +24,8 @@ const uiSlice = createSlice({
     aiPlan: "professional" as AiPlan,
     activeIndustry: "Textile",
     activeCompanyId: "kavya-textiles",
+    authUser: null as AuthUser | null,
+    authStatus: "idle" as "idle" | "authenticated" | "anonymous",
   },
   reducers: {
     setTheme(state, action: PayloadAction<ThemeMode>) {
@@ -50,6 +61,17 @@ const uiSlice = createSlice({
     setActiveCompany(state, action: PayloadAction<string>) {
       state.activeCompanyId = action.payload;
     },
+    setAuthUser(state, action: PayloadAction<AuthUser>) {
+      state.authUser = action.payload;
+      state.authStatus = "authenticated";
+    },
+    clearAuthUser(state) {
+      state.authUser = null;
+      state.authStatus = "anonymous";
+    },
+    setAuthStatus(state, action: PayloadAction<"idle" | "authenticated" | "anonymous">) {
+      state.authStatus = action.payload;
+    },
   },
 });
 
@@ -62,6 +84,9 @@ export const {
   setAiCreditLimit,
   setAiPlan,
   consumeAiCredits,
+  setAuthUser,
+  clearAuthUser,
+  setAuthStatus,
 } = uiSlice.actions;
 
 export const store = configureStore({

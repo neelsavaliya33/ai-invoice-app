@@ -26,16 +26,33 @@ import {
   WalletCards,
 } from "lucide-react";
 import { Badge, Button, Card } from "@/components/ui";
-import { aiPlans, industries, planAddOns } from "@/lib/data";
+import { industries } from "@/lib/data";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandLogo } from "@/components/brand-logo";
+import { type UiPlan, usePlanAddOns, usePlans, useTrialConfig } from "@/lib/use-plans";
 
 const simplicity = [
   ["Access from the web", "Your billing, inventory, accounts, payroll, and dispatch data stays ready across office and counter workflows."],
   ["Easy for non-accountants", "Simple forms, guided validation, and plain-language reports help owners and staff work without accounting confusion."],
   ["Fast daily operations", "Create bills, check stock, collect dues, prepare e-way drafts, and read AI summaries in minutes."],
 ] as const;
+
+function landingPlanGridClass(planCount: number) {
+  if (planCount <= 1) return "mx-auto max-w-md";
+  if (planCount === 2) return "mx-auto max-w-5xl md:grid-cols-2";
+  if (planCount === 3) return "mx-auto max-w-6xl md:grid-cols-2 xl:grid-cols-3";
+  return "md:grid-cols-2 xl:grid-cols-4";
+}
+
+function landingLimitRows(plan: UiPlan) {
+  return [
+    plan.userLimitLabel,
+    plan.companyLimitLabel,
+    `${plan.aiCreditLimit.toLocaleString("en-IN")} AI credits/month`,
+    `${plan.ewayBillLimit.toLocaleString("en-IN")} e-way bills`,
+  ];
+}
 
 const features = [
   ["Invoices", "Create GST-ready invoices, add HSN/SAC, due dates, payment details, PDF previews, and WhatsApp-ready reminders.", ReceiptText],
@@ -99,6 +116,13 @@ function ScrollRevealRuntime() {
 }
 
 export default function LandingPage() {
+  const { plans } = usePlans();
+  const { addOns } = usePlanAddOns();
+  const { trialConfig } = useTrialConfig();
+  const trialPlanName = trialConfig?.planName ?? "trial";
+  const trialDays = trialConfig?.trialDays;
+  const trialDaysLabel = trialDays ? `${trialDays} days` : "your configured trial";
+
   return (
     <div className="min-h-screen overflow-hidden bg-background">
       <ScrollRevealRuntime />
@@ -312,11 +336,11 @@ export default function LandingPage() {
             <Badge tone="green">Competitive web-app pricing</Badge>
             <h2 className="text-balance mt-4 text-4xl font-black lg:text-5xl">Affordable annual plans for Indian MSMEs</h2>
             <p className="mt-4 max-w-3xl leading-7 text-muted-foreground">
-              Start free, try Professional for 14 days without a card, then choose a web plan with clear user limits, company limits, e-way bill allowance, and monthly AI credits.
+              Start free, try {trialPlanName} for {trialDaysLabel} without a card, then choose a web plan with clear user limits, company limits, e-way bill allowance, and monthly AI credits.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {aiPlans.map((plan) => (
+          <div className={`mt-10 grid gap-4 ${landingPlanGridClass(plans.length)}`}>
+            {plans.map((plan) => (
               <Card key={plan.id} className={`scroll-reveal relative p-5 ${plan.recommended ? "border-primary bg-primary/10" : ""}`}>
                 {plan.recommended ? <Badge tone="green" className="absolute right-4 top-4">Best for most</Badge> : null}
                 <p className="text-lg font-black">{plan.name}</p>
@@ -324,10 +348,9 @@ export default function LandingPage() {
                 <p className="mt-5 text-3xl font-black text-primary">{plan.price}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{plan.billingPeriod}</p>
                 <div className="mt-5 grid gap-2 text-sm">
-                  <span className="font-semibold">{plan.userLimit} user{plan.userLimit > 1 ? "s" : ""}</span>
-                  <span className="font-semibold">{plan.companyLimit}{plan.id === "business" ? "+" : ""} compan{plan.companyLimit > 1 ? "ies" : "y"}</span>
-                  <span className="font-semibold">{plan.aiCreditLimit.toLocaleString("en-IN")} AI credits/month</span>
-                  <span className="font-semibold">{plan.ewayBillLimit.toLocaleString("en-IN")} e-way bills</span>
+                  {landingLimitRows(plan).map((limit) => (
+                    <span key={limit} className="font-semibold">{limit}</span>
+                  ))}
                 </div>
                 <div className="mt-5 grid gap-2">
                   {plan.featureHighlights.map((item) => (
@@ -346,7 +369,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 <Link href="/signup" className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-black text-primary-foreground">
-                  {plan.id === "free" ? "Start free" : plan.id === "business" ? "Contact sales" : "Try 14 days"}
+                  {plan.ctaLabel}
                 </Link>
               </Card>
             ))}
@@ -358,7 +381,7 @@ export default function LandingPage() {
                 <p className="mt-1 text-sm text-muted-foreground">Add seats, AI credits, e-way bills, or another company without forcing a full upgrade.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {planAddOns.map((addOn) => <Badge key={addOn.id} tone="blue">{addOn.name}: {addOn.price}</Badge>)}
+                {addOns.map((addOn) => <Badge key={addOn.id} tone="blue">{addOn.name}: {addOn.price}</Badge>)}
               </div>
             </div>
           </Card>
@@ -413,7 +436,7 @@ export default function LandingPage() {
             <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-center">
               <div>
                 <Badge className="bg-white/35 text-slate-950">Try KoshPilot for free</Badge>
-                <h2 className="text-balance mt-5 max-w-3xl text-4xl font-black leading-tight lg:text-5xl">Try KoshPilot for 14 days and decide which plan suits your business</h2>
+                <h2 className="text-balance mt-5 max-w-3xl text-4xl font-black leading-tight lg:text-5xl">Try KoshPilot for {trialDaysLabel} and decide which plan suits your business</h2>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-800">
                   Explore invoices, inventory, accounting, e-way bills, payroll, reports, settings, and AI Copilot with local sample data.
                 </p>
@@ -427,7 +450,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <Card className="border-slate-950/15 bg-white p-6 text-slate-950 shadow-2xl">
-                <p className="text-sm font-bold text-primary">14 Days Professional Trial</p>
+                <p className="text-sm font-bold text-primary">{trialDays ? `${trialDays} Days` : "Free"} {trialPlanName} Trial</p>
                 <p className="mt-3 text-5xl font-black text-slate-950">Rs. 0</p>
                 <p className="mt-2 text-sm text-slate-500">No card required. Account stays on Free unless upgraded.</p>
                 <div className="mt-6 grid gap-3 text-sm font-semibold text-slate-700">

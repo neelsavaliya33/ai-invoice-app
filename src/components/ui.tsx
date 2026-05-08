@@ -49,9 +49,9 @@ export function Badge({ children, className, tone = "default" }: React.HTMLAttri
   );
 }
 
-export function Field({ label, children, helper, required, error }: { label: string; children: React.ReactNode; helper?: string; required?: boolean; error?: string }) {
+export function Field({ label, children, helper, required, error, className }: { label: string; children: React.ReactNode; helper?: string; required?: boolean; error?: string; className?: string }) {
   return (
-    <label className="grid gap-2">
+    <label className={cn("grid gap-2", className)}>
       <span className="label">
         {label}
         {required ? <span className="ml-1 text-destructive">*</span> : null}
@@ -96,7 +96,57 @@ export function TableShell({ children, className }: { children: React.ReactNode;
   return <div className={cn("animate-fade-up max-w-full overflow-x-auto rounded-2xl border bg-card shadow-soft", className)}>{children}</div>;
 }
 
-export function DataTable({ headers, rows }: { headers: string[]; rows: React.ReactNode[][] }) {
+export function EmptyState({
+  title = "No records found",
+  description = "Create your first record to start using this workflow.",
+  action,
+  className,
+}: {
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("grid min-h-[320px] place-items-center rounded-2xl border bg-card p-8 text-center shadow-soft", className)}>
+      <div className="max-w-lg">
+        <EmptyStateIllustration />
+        <h2 className="mt-5 text-2xl font-black">{title}</h2>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>
+        {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
+      </div>
+    </div>
+  );
+}
+
+function EmptyStateIllustration() {
+  return (
+    <svg
+      className="mx-auto h-40 w-56 max-w-full"
+      viewBox="0 0 224 160"
+      fill="none"
+      role="img"
+      aria-label="Empty workspace illustration"
+    >
+      <rect x="44" y="34" width="104" height="92" rx="18" className="fill-primary/10 stroke-primary/25" strokeWidth="2" />
+      <rect x="62" y="52" width="68" height="10" rx="5" className="fill-primary/45" />
+      <rect x="62" y="72" width="52" height="8" rx="4" className="fill-muted-foreground/20" />
+      <rect x="62" y="88" width="70" height="8" rx="4" className="fill-muted-foreground/20" />
+      <rect x="62" y="104" width="40" height="8" rx="4" className="fill-muted-foreground/20" />
+      <circle cx="152" cy="54" r="24" className="fill-primary/20 stroke-primary/45" strokeWidth="2" />
+      <path d="M142 54h20M152 44v20" className="stroke-primary" strokeWidth="5" strokeLinecap="round" />
+      <path d="M31 126c20 10 49 15 86 14 30-1 55-6 76-16" className="stroke-muted-foreground/20" strokeWidth="8" strokeLinecap="round" />
+      <path d="M159 102l22 9-15 14-21-9 14-14z" className="fill-amber-400/80" />
+      <path d="M181 111v19l-15 14v-19l15-14z" className="fill-amber-500/90" />
+      <path d="M145 116l21 9v19l-21-9v-19z" className="fill-amber-300/80" />
+      <circle cx="34" cy="58" r="7" className="fill-primary/45" />
+      <circle cx="186" cy="42" r="5" className="fill-amber-400" />
+      <circle cx="178" cy="86" r="4" className="fill-primary/35" />
+    </svg>
+  );
+}
+
+export function DataTable({ headers, rows, empty }: { headers: string[]; rows: React.ReactNode[][]; empty?: React.ReactNode }) {
   return (
     <TableShell>
       <table className="w-full min-w-[720px] text-left text-sm">
@@ -110,7 +160,7 @@ export function DataTable({ headers, rows }: { headers: string[]; rows: React.Re
           </tr>
         </thead>
         <tbody className="divide-y">
-          {rows.map((row, index) => (
+          {rows.length ? rows.map((row, index) => (
             <tr key={index} className="animate-fade-up hover:bg-muted/40" style={{ animationDelay: `${index * 35}ms` }}>
               {row.map((cell, cellIndex) => (
                 <td key={cellIndex} className="px-4 py-4 align-middle">
@@ -118,7 +168,13 @@ export function DataTable({ headers, rows }: { headers: string[]; rows: React.Re
                 </td>
               ))}
             </tr>
-          ))}
+          )) : (
+            <tr>
+              <td colSpan={headers.length} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                {empty ?? "No records found"}
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </TableShell>
